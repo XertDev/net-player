@@ -42,6 +42,8 @@
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
+FMPI2C_HandleTypeDef hfmpi2c1;
+
 I2S_HandleTypeDef hi2s2;
 DMA_HandleTypeDef hdma_spi2_tx;
 
@@ -70,6 +72,7 @@ static void MX_I2S2_Init(void);
 static void MX_RTC_Init(void);
 static void MX_FSMC_Init(void);
 static void MX_SDIO_SD_Init(void);
+static void MX_FMPI2C1_Init(void);
 void StartDefaultTask(void *argument);
 
 /* USER CODE BEGIN PFP */
@@ -115,6 +118,7 @@ int main(void)
   MX_FSMC_Init();
   MX_SDIO_SD_Init();
   MX_FATFS_Init();
+  MX_FMPI2C1_Init();
   /* USER CODE BEGIN 2 */
 
   /* USER CODE END 2 */
@@ -207,7 +211,8 @@ void SystemClock_Config(void)
     Error_Handler();
   }
   PeriphClkInitStruct.PeriphClockSelection = RCC_PERIPHCLK_I2S_APB1|RCC_PERIPHCLK_RTC
-                              |RCC_PERIPHCLK_SDIO|RCC_PERIPHCLK_CLK48;
+                              |RCC_PERIPHCLK_SDIO|RCC_PERIPHCLK_CLK48
+                              |RCC_PERIPHCLK_FMPI2C1;
   PeriphClkInitStruct.PLLI2S.PLLI2SN = 97;
   PeriphClkInitStruct.PLLI2S.PLLI2SM = 8;
   PeriphClkInitStruct.PLLI2S.PLLI2SR = 2;
@@ -217,10 +222,51 @@ void SystemClock_Config(void)
   PeriphClkInitStruct.SdioClockSelection = RCC_SDIOCLKSOURCE_CLK48;
   PeriphClkInitStruct.PLLI2SSelection = RCC_PLLI2SCLKSOURCE_PLLSRC;
   PeriphClkInitStruct.I2sApb1ClockSelection = RCC_I2SAPB1CLKSOURCE_PLLI2S;
+  PeriphClkInitStruct.Fmpi2c1ClockSelection = RCC_FMPI2C1CLKSOURCE_APB;
   if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInitStruct) != HAL_OK)
   {
     Error_Handler();
   }
+}
+
+/**
+  * @brief FMPI2C1 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_FMPI2C1_Init(void)
+{
+
+  /* USER CODE BEGIN FMPI2C1_Init 0 */
+
+  /* USER CODE END FMPI2C1_Init 0 */
+
+  /* USER CODE BEGIN FMPI2C1_Init 1 */
+
+  /* USER CODE END FMPI2C1_Init 1 */
+  hfmpi2c1.Instance = FMPI2C1;
+  hfmpi2c1.Init.Timing = 0x00401959;
+  hfmpi2c1.Init.OwnAddress1 = 0;
+  hfmpi2c1.Init.AddressingMode = FMPI2C_ADDRESSINGMODE_7BIT;
+  hfmpi2c1.Init.DualAddressMode = FMPI2C_DUALADDRESS_DISABLE;
+  hfmpi2c1.Init.OwnAddress2 = 0;
+  hfmpi2c1.Init.OwnAddress2Masks = FMPI2C_OA2_NOMASK;
+  hfmpi2c1.Init.GeneralCallMode = FMPI2C_GENERALCALL_DISABLE;
+  hfmpi2c1.Init.NoStretchMode = FMPI2C_NOSTRETCH_DISABLE;
+  if (HAL_FMPI2C_Init(&hfmpi2c1) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /** Configure Analogue filter
+  */
+  if (HAL_FMPI2CEx_ConfigAnalogFilter(&hfmpi2c1, FMPI2C_ANALOGFILTER_ENABLE) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN FMPI2C1_Init 2 */
+
+  /* USER CODE END FMPI2C1_Init 2 */
+
 }
 
 /**
@@ -561,14 +607,6 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOG, &GPIO_InitStruct);
-
-  /*Configure GPIO pins : I2CFMP1_SCL_Pin I2CFMP_SDA_Pin */
-  GPIO_InitStruct.Pin = I2CFMP1_SCL_Pin|I2CFMP_SDA_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_AF_OD;
-  GPIO_InitStruct.Pull = GPIO_PULLUP;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
-  GPIO_InitStruct.Alternate = GPIO_AF4_FMPI2C1;
-  HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
 
   /*Configure GPIO pin : DFSDM1_CKOUT_Pin */
   GPIO_InitStruct.Pin = DFSDM1_CKOUT_Pin;
