@@ -1,4 +1,4 @@
-#include <Touch/TouchPanel.hpp>
+#include "TouchPanel.hpp"
 #include "stm32f4xx_hal_fmpi2c.h"
 
 constexpr auto I2C_MEMADD_SIZE_8BIT = 0x00000001U;
