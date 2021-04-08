@@ -46,11 +46,16 @@ FMPI2C_HandleTypeDef hfmpi2c1;
 I2S_HandleTypeDef hi2s2;
 DMA_HandleTypeDef hdma_spi2_tx;
 
+LPTIM_HandleTypeDef hlptim1;
+
 RTC_HandleTypeDef hrtc;
 
 SD_HandleTypeDef hsd;
 
+TIM_HandleTypeDef htim9;
+
 SRAM_HandleTypeDef hsram1;
+SRAM_HandleTypeDef hsram2;
 
 /* USER CODE BEGIN PV */
 
@@ -61,17 +66,19 @@ void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_DMA_Init(void);
 static void MX_I2S2_Init(void);
-static void MX_RTC_Init(void);
-static void MX_FSMC_Init(void);
-static void MX_SDIO_SD_Init(void);
 static void MX_FMPI2C1_Init(void);
+static void MX_SDIO_SD_Init(void);
+static void MX_TIM9_Init(void);
+static void MX_FSMC_Init(void);
+static void MX_LPTIM1_Init(void);
+static void MX_RTC_Init(void);
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-
+extern void main_cpp();
 /* USER CODE END 0 */
 
 /**
@@ -104,12 +111,16 @@ int main(void)
   MX_GPIO_Init();
   MX_DMA_Init();
   MX_I2S2_Init();
-  MX_RTC_Init();
-  MX_FSMC_Init();
+  MX_FMPI2C1_Init();
   MX_SDIO_SD_Init();
   MX_FATFS_Init();
-  MX_FMPI2C1_Init();
+  MX_TIM9_Init();
+  MX_FSMC_Init();
+  MX_LPTIM1_Init();
+  MX_RTC_Init();
   /* USER CODE BEGIN 2 */
+
+  main_cpp();
 
   /* USER CODE END 2 */
 
@@ -150,7 +161,7 @@ void SystemClock_Config(void)
   RCC_OscInitStruct.PLL.PLLM = 8;
   RCC_OscInitStruct.PLL.PLLN = 50;
   RCC_OscInitStruct.PLL.PLLP = RCC_PLLP_DIV2;
-  RCC_OscInitStruct.PLL.PLLQ = 2;
+  RCC_OscInitStruct.PLL.PLLQ = 4;
   RCC_OscInitStruct.PLL.PLLR = 2;
   if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
   {
@@ -171,8 +182,8 @@ void SystemClock_Config(void)
   }
   PeriphClkInitStruct.PeriphClockSelection = RCC_PERIPHCLK_I2S_APB1|RCC_PERIPHCLK_RTC
                               |RCC_PERIPHCLK_SDIO|RCC_PERIPHCLK_CLK48
-                              |RCC_PERIPHCLK_FMPI2C1;
-  PeriphClkInitStruct.PLLI2S.PLLI2SN = 97;
+                              |RCC_PERIPHCLK_FMPI2C1|RCC_PERIPHCLK_LPTIM1;
+  PeriphClkInitStruct.PLLI2S.PLLI2SN = 90;
   PeriphClkInitStruct.PLLI2S.PLLI2SM = 8;
   PeriphClkInitStruct.PLLI2S.PLLI2SR = 2;
   PeriphClkInitStruct.PLLI2S.PLLI2SQ = 2;
@@ -182,6 +193,7 @@ void SystemClock_Config(void)
   PeriphClkInitStruct.PLLI2SSelection = RCC_PLLI2SCLKSOURCE_PLLSRC;
   PeriphClkInitStruct.I2sApb1ClockSelection = RCC_I2SAPB1CLKSOURCE_PLLI2S;
   PeriphClkInitStruct.Fmpi2c1ClockSelection = RCC_FMPI2C1CLKSOURCE_APB;
+  PeriphClkInitStruct.Lptim1ClockSelection = RCC_LPTIM1CLKSOURCE_LSE;
   if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInitStruct) != HAL_OK)
   {
     Error_Handler();
@@ -204,7 +216,7 @@ static void MX_FMPI2C1_Init(void)
 
   /* USER CODE END FMPI2C1_Init 1 */
   hfmpi2c1.Instance = FMPI2C1;
-  hfmpi2c1.Init.Timing = 0x00401959;
+  hfmpi2c1.Init.Timing = 0x00C0EAFF;
   hfmpi2c1.Init.OwnAddress1 = 0;
   hfmpi2c1.Init.AddressingMode = FMPI2C_ADDRESSINGMODE_7BIT;
   hfmpi2c1.Init.DualAddressMode = FMPI2C_DUALADDRESS_DISABLE;
@@ -247,7 +259,7 @@ static void MX_I2S2_Init(void)
   hi2s2.Init.Mode = I2S_MODE_MASTER_TX;
   hi2s2.Init.Standard = I2S_STANDARD_PHILIPS;
   hi2s2.Init.DataFormat = I2S_DATAFORMAT_16B;
-  hi2s2.Init.MCLKOutput = I2S_MCLKOUTPUT_DISABLE;
+  hi2s2.Init.MCLKOutput = I2S_MCLKOUTPUT_ENABLE;
   hi2s2.Init.AudioFreq = I2S_AUDIOFREQ_44K;
   hi2s2.Init.CPOL = I2S_CPOL_LOW;
   hi2s2.Init.ClockSource = I2S_CLOCK_PLL;
@@ -259,6 +271,39 @@ static void MX_I2S2_Init(void)
   /* USER CODE BEGIN I2S2_Init 2 */
 
   /* USER CODE END I2S2_Init 2 */
+
+}
+
+/**
+  * @brief LPTIM1 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_LPTIM1_Init(void)
+{
+
+  /* USER CODE BEGIN LPTIM1_Init 0 */
+
+  /* USER CODE END LPTIM1_Init 0 */
+
+  /* USER CODE BEGIN LPTIM1_Init 1 */
+
+  /* USER CODE END LPTIM1_Init 1 */
+  hlptim1.Instance = LPTIM1;
+  hlptim1.Init.Clock.Source = LPTIM_CLOCKSOURCE_APBCLOCK_LPOSC;
+  hlptim1.Init.Clock.Prescaler = LPTIM_PRESCALER_DIV128;
+  hlptim1.Init.Trigger.Source = LPTIM_TRIGSOURCE_SOFTWARE;
+  hlptim1.Init.OutputPolarity = LPTIM_OUTPUTPOLARITY_HIGH;
+  hlptim1.Init.UpdateMode = LPTIM_UPDATE_IMMEDIATE;
+  hlptim1.Init.CounterSource = LPTIM_COUNTERSOURCE_INTERNAL;
+  if (HAL_LPTIM_Init(&hlptim1) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  __HAL_LPTIM_OPTR_CONFIG(&hlptim1, LPTIM_OP_PAD_AF);
+  /* USER CODE BEGIN LPTIM1_Init 2 */
+
+  /* USER CODE END LPTIM1_Init 2 */
 
 }
 
@@ -353,6 +398,48 @@ static void MX_SDIO_SD_Init(void)
 }
 
 /**
+  * @brief TIM9 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_TIM9_Init(void)
+{
+
+  /* USER CODE BEGIN TIM9_Init 0 */
+
+  /* USER CODE END TIM9_Init 0 */
+
+  TIM_OC_InitTypeDef sConfigOC = {0};
+
+  /* USER CODE BEGIN TIM9_Init 1 */
+
+  /* USER CODE END TIM9_Init 1 */
+  htim9.Instance = TIM9;
+  htim9.Init.Prescaler = 1000;
+  htim9.Init.CounterMode = TIM_COUNTERMODE_UP;
+  htim9.Init.Period = 999;
+  htim9.Init.ClockDivision = TIM_CLOCKDIVISION_DIV4;
+  htim9.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+  if (HAL_TIM_PWM_Init(&htim9) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sConfigOC.OCMode = TIM_OCMODE_PWM1;
+  sConfigOC.Pulse = 0;
+  sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
+  sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
+  if (HAL_TIM_PWM_ConfigChannel(&htim9, &sConfigOC, TIM_CHANNEL_1) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN TIM9_Init 2 */
+
+  /* USER CODE END TIM9_Init 2 */
+  HAL_TIM_MspPostInit(&htim9);
+
+}
+
+/**
   * Enable DMA controller clock
   */
 static void MX_DMA_Init(void)
@@ -388,16 +475,13 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOD_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOE, LED1_RED_Pin|MEMS_LED_Pin|LCD_BL_CTRL_Pin, GPIO_PIN_RESET);
-
-  /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(WIFI_RST_GPIO_Port, WIFI_RST_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOE, LED1_RED_Pin|MEMS_LED_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(LED2_GREEN_GPIO_Port, LED2_GREEN_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOB, LCD_CTP_RST_Pin|LCD_TE_Pin|WIFI_WKUP_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOB, LCD_CTP_RST_Pin|WIFI_WKUP_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOG, USB_OTG_FS_PWR_EN_Pin|ARD_D2_Pin, GPIO_PIN_RESET);
@@ -410,20 +494,12 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Alternate = GPIO_AF9_QSPI;
   HAL_GPIO_Init(QSPI_BK1_IO2_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : LED1_RED_Pin MEMS_LED_Pin LCD_BL_CTRL_Pin */
-  GPIO_InitStruct.Pin = LED1_RED_Pin|MEMS_LED_Pin|LCD_BL_CTRL_Pin;
+  /*Configure GPIO pins : LED1_RED_Pin MEMS_LED_Pin */
+  GPIO_InitStruct.Pin = LED1_RED_Pin|MEMS_LED_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOE, &GPIO_InitStruct);
-
-  /*Configure GPIO pin : ARD_D5_Pin */
-  GPIO_InitStruct.Pin = ARD_D5_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  GPIO_InitStruct.Alternate = GPIO_AF3_TIM9;
-  HAL_GPIO_Init(ARD_D5_GPIO_Port, &GPIO_InitStruct);
 
   /*Configure GPIO pins : QSPI_BK1_IO0_Pin QSPI_BK1_IO1_Pin */
   GPIO_InitStruct.Pin = QSPI_BK1_IO0_Pin|QSPI_BK1_IO1_Pin;
@@ -441,13 +517,6 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Alternate = GPIO_AF2_TIM5;
   HAL_GPIO_Init(ARD_D3_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pin : WIFI_RST_Pin */
-  GPIO_InitStruct.Pin = WIFI_RST_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(WIFI_RST_GPIO_Port, &GPIO_InitStruct);
-
   /*Configure GPIO pins : ARD_A0_Pin ARD_A5_Pin */
   GPIO_InitStruct.Pin = ARD_A0_Pin|ARD_A5_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
@@ -456,7 +525,7 @@ static void MX_GPIO_Init(void)
 
   /*Configure GPIO pin : CTP_INT_Pin */
   GPIO_InitStruct.Pin = CTP_INT_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING_FALLING;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(CTP_INT_GPIO_Port, &GPIO_InitStruct);
 
@@ -509,11 +578,11 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Alternate = GPIO_AF9_QSPI;
   HAL_GPIO_Init(QSPI_CLK_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pin : PF11 */
-  GPIO_InitStruct.Pin = GPIO_PIN_11;
-  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  HAL_GPIO_Init(GPIOF, &GPIO_InitStruct);
+  /*Configure GPIO pin : SD_DETECT_Pin */
+  GPIO_InitStruct.Pin = SD_DETECT_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+  GPIO_InitStruct.Pull = GPIO_PULLUP;
+  HAL_GPIO_Init(SD_DETECT_GPIO_Port, &GPIO_InitStruct);
 
   /*Configure GPIO pins : ARD_D15_Pin ARD_D14_Pin */
   GPIO_InitStruct.Pin = ARD_D15_Pin|ARD_D14_Pin;
@@ -531,12 +600,25 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Alternate = GPIO_AF7_SPI3;
   HAL_GPIO_Init(ARD_D13_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : LCD_CTP_RST_Pin LCD_TE_Pin WIFI_WKUP_Pin */
-  GPIO_InitStruct.Pin = LCD_CTP_RST_Pin|LCD_TE_Pin|WIFI_WKUP_Pin;
+  /*Configure GPIO pin : LCD_CTP_RST_Pin */
+  GPIO_InitStruct.Pin = LCD_CTP_RST_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
+  HAL_GPIO_Init(LCD_CTP_RST_GPIO_Port, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : LCD_TE_Pin */
+  GPIO_InitStruct.Pin = LCD_TE_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(LCD_TE_GPIO_Port, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : WIFI_WKUP_Pin */
+  GPIO_InitStruct.Pin = WIFI_WKUP_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+  HAL_GPIO_Init(WIFI_WKUP_GPIO_Port, &GPIO_InitStruct);
 
   /*Configure GPIO pin : QSPI_BK1_IO3_Pin */
   GPIO_InitStruct.Pin = QSPI_BK1_IO3_Pin;
@@ -645,6 +727,10 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Alternate = GPIO_AF2_TIM4;
   HAL_GPIO_Init(ARD_D9_GPIO_Port, &GPIO_InitStruct);
 
+  /* EXTI interrupt init*/
+  HAL_NVIC_SetPriority(EXTI1_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(EXTI1_IRQn);
+
 }
 
 /* FSMC initialization function */
@@ -656,6 +742,7 @@ static void MX_FSMC_Init(void)
   /* USER CODE END FSMC_Init 0 */
 
   FSMC_NORSRAM_TimingTypeDef Timing = {0};
+  FSMC_NORSRAM_TimingTypeDef ExtTiming = {0};
 
   /* USER CODE BEGIN FSMC_Init 1 */
 
@@ -666,21 +753,63 @@ static void MX_FSMC_Init(void)
   hsram1.Instance = FSMC_NORSRAM_DEVICE;
   hsram1.Extended = FSMC_NORSRAM_EXTENDED_DEVICE;
   /* hsram1.Init */
-  hsram1.Init.NSBank = FSMC_NORSRAM_BANK1;
+  hsram1.Init.NSBank = FSMC_NORSRAM_BANK3;
   hsram1.Init.DataAddressMux = FSMC_DATA_ADDRESS_MUX_DISABLE;
   hsram1.Init.MemoryType = FSMC_MEMORY_TYPE_SRAM;
   hsram1.Init.MemoryDataWidth = FSMC_NORSRAM_MEM_BUS_WIDTH_16;
   hsram1.Init.BurstAccessMode = FSMC_BURST_ACCESS_MODE_DISABLE;
   hsram1.Init.WaitSignalPolarity = FSMC_WAIT_SIGNAL_POLARITY_LOW;
   hsram1.Init.WaitSignalActive = FSMC_WAIT_TIMING_BEFORE_WS;
-  hsram1.Init.WriteOperation = FSMC_WRITE_OPERATION_DISABLE;
+  hsram1.Init.WriteOperation = FSMC_WRITE_OPERATION_ENABLE;
   hsram1.Init.WaitSignal = FSMC_WAIT_SIGNAL_DISABLE;
-  hsram1.Init.ExtendedMode = FSMC_EXTENDED_MODE_DISABLE;
+  hsram1.Init.ExtendedMode = FSMC_EXTENDED_MODE_ENABLE;
   hsram1.Init.AsynchronousWait = FSMC_ASYNCHRONOUS_WAIT_DISABLE;
   hsram1.Init.WriteBurst = FSMC_WRITE_BURST_DISABLE;
   hsram1.Init.ContinuousClock = FSMC_CONTINUOUS_CLOCK_SYNC_ONLY;
-  hsram1.Init.WriteFifo = FSMC_WRITE_FIFO_ENABLE;
+  hsram1.Init.WriteFifo = FSMC_WRITE_FIFO_DISABLE;
   hsram1.Init.PageSize = FSMC_PAGE_SIZE_NONE;
+  /* Timing */
+  Timing.AddressSetupTime = 3;
+  Timing.AddressHoldTime = 15;
+  Timing.DataSetupTime = 4;
+  Timing.BusTurnAroundDuration = 1;
+  Timing.CLKDivision = 16;
+  Timing.DataLatency = 17;
+  Timing.AccessMode = FSMC_ACCESS_MODE_A;
+  /* ExtTiming */
+  ExtTiming.AddressSetupTime = 3;
+  ExtTiming.AddressHoldTime = 15;
+  ExtTiming.DataSetupTime = 4;
+  ExtTiming.BusTurnAroundDuration = 1;
+  ExtTiming.CLKDivision = 16;
+  ExtTiming.DataLatency = 17;
+  ExtTiming.AccessMode = FSMC_ACCESS_MODE_A;
+
+  if (HAL_SRAM_Init(&hsram1, &Timing, &ExtTiming) != HAL_OK)
+  {
+    Error_Handler( );
+  }
+
+  /** Perform the SRAM2 memory initialization sequence
+  */
+  hsram2.Instance = FSMC_NORSRAM_DEVICE;
+  hsram2.Extended = FSMC_NORSRAM_EXTENDED_DEVICE;
+  /* hsram2.Init */
+  hsram2.Init.NSBank = FSMC_NORSRAM_BANK1;
+  hsram2.Init.DataAddressMux = FSMC_DATA_ADDRESS_MUX_DISABLE;
+  hsram2.Init.MemoryType = FSMC_MEMORY_TYPE_PSRAM;
+  hsram2.Init.MemoryDataWidth = FSMC_NORSRAM_MEM_BUS_WIDTH_16;
+  hsram2.Init.BurstAccessMode = FSMC_BURST_ACCESS_MODE_DISABLE;
+  hsram2.Init.WaitSignalPolarity = FSMC_WAIT_SIGNAL_POLARITY_LOW;
+  hsram2.Init.WaitSignalActive = FSMC_WAIT_TIMING_BEFORE_WS;
+  hsram2.Init.WriteOperation = FSMC_WRITE_OPERATION_ENABLE;
+  hsram2.Init.WaitSignal = FSMC_WAIT_SIGNAL_DISABLE;
+  hsram2.Init.ExtendedMode = FSMC_EXTENDED_MODE_ENABLE;
+  hsram2.Init.AsynchronousWait = FSMC_ASYNCHRONOUS_WAIT_DISABLE;
+  hsram2.Init.WriteBurst = FSMC_WRITE_BURST_DISABLE;
+  hsram2.Init.ContinuousClock = FSMC_CONTINUOUS_CLOCK_SYNC_ONLY;
+  hsram2.Init.WriteFifo = FSMC_WRITE_FIFO_DISABLE;
+  hsram2.Init.PageSize = FSMC_PAGE_SIZE_NONE;
   /* Timing */
   Timing.AddressSetupTime = 15;
   Timing.AddressHoldTime = 15;
@@ -690,8 +819,15 @@ static void MX_FSMC_Init(void)
   Timing.DataLatency = 17;
   Timing.AccessMode = FSMC_ACCESS_MODE_A;
   /* ExtTiming */
+  ExtTiming.AddressSetupTime = 15;
+  ExtTiming.AddressHoldTime = 15;
+  ExtTiming.DataSetupTime = 255;
+  ExtTiming.BusTurnAroundDuration = 15;
+  ExtTiming.CLKDivision = 16;
+  ExtTiming.DataLatency = 17;
+  ExtTiming.AccessMode = FSMC_ACCESS_MODE_A;
 
-  if (HAL_SRAM_Init(&hsram1, &Timing, NULL) != HAL_OK)
+  if (HAL_SRAM_Init(&hsram2, &Timing, &ExtTiming) != HAL_OK)
   {
     Error_Handler( );
   }
@@ -704,27 +840,6 @@ static void MX_FSMC_Init(void)
 /* USER CODE BEGIN 4 */
 
 /* USER CODE END 4 */
-
-/**
-  * @brief  Period elapsed callback in non blocking mode
-  * @note   This function is called  when TIM1 interrupt took place, inside
-  * HAL_TIM_IRQHandler(). It makes a direct call to HAL_IncTick() to increment
-  * a global variable "uwTick" used as application time base.
-  * @param  htim : TIM handle
-  * @retval None
-  */
-void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
-{
-  /* USER CODE BEGIN Callback 0 */
-
-  /* USER CODE END Callback 0 */
-  if (htim->Instance == TIM1) {
-    HAL_IncTick();
-  }
-  /* USER CODE BEGIN Callback 1 */
-
-  /* USER CODE END Callback 1 */
-}
 
 /**
   * @brief  This function is executed in case of error occurrence.

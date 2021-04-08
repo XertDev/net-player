@@ -19,7 +19,7 @@ LCDDisplay::~LCDDisplay() {
 }
 
 void LCDDisplay::setBacklight(uint8_t level) {
-	assert_param(level <= 1.0f);
+	assert_param(level <= 100);
 
 	const auto& period = io_settings_.backlight_pwm.Init.Period;
 

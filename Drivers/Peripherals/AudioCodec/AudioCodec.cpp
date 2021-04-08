@@ -239,6 +239,7 @@ void audio::AudioCodec::setVolume(uint8_t volume) {
 		using detail::REG;
 
 		const uint8_t volume_val = ((volume > 100)? 100:(((volume * 63) / 100)));
+		this->current_volume = volume_val;
 
 		unmute();
 
@@ -249,6 +250,9 @@ void audio::AudioCodec::setVolume(uint8_t volume) {
 		writeReg(REG::SPEAKER_VOLUME_RIGHT, volume_val | 0x140);
 	}
 
+}
+uint8_t audio::AudioCodec::getVolume() {
+	return this->current_volume;
 }
 
 void audio::AudioCodec::mute() {

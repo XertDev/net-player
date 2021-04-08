@@ -78,7 +78,7 @@
 #define HAL_FMPI2C_MODULE_ENABLED
 /* #define HAL_SPDIFRX_MODULE_ENABLED   */
 /* #define HAL_DFSDM_MODULE_ENABLED   */
-/* #define HAL_LPTIM_MODULE_ENABLED   */
+#define HAL_LPTIM_MODULE_ENABLED
 #define HAL_GPIO_MODULE_ENABLED
 #define HAL_EXTI_MODULE_ENABLED
 #define HAL_DMA_MODULE_ENABLED
@@ -94,7 +94,7 @@
   *        (when HSE is used as system clock source, directly or through the PLL).
   */
 #if !defined  (HSE_VALUE)
-  #define HSE_VALUE    ((uint32_t)25000000U) /*!< Value of the External oscillator in Hz */
+  #define HSE_VALUE    ((uint32_t)8000000U) /*!< Value of the External oscillator in Hz */
 #endif /* HSE_VALUE */
 
 #if !defined  (HSE_STARTUP_TIMEOUT)
@@ -159,7 +159,7 @@
 #define  USE_HAL_DAC_REGISTER_CALLBACKS         0U /* DAC register callback disabled       */
 #define  USE_HAL_DCMI_REGISTER_CALLBACKS        0U /* DCMI register callback disabled      */
 #define  USE_HAL_DFSDM_REGISTER_CALLBACKS       0U /* DFSDM register callback disabled     */
-#define  USE_HAL_DMA2D_REGISTER_CALLBACKS       0U /* DMA2D register callback disabled     */
+#define  USE_HAL_DMA2D_REGISTER_CALLBACKS       1U /* DMA2D register callback enabled     */
 #define  USE_HAL_DSI_REGISTER_CALLBACKS         0U /* DSI register callback disabled       */
 #define  USE_HAL_ETH_REGISTER_CALLBACKS         0U /* ETH register callback disabled       */
 #define  USE_HAL_HASH_REGISTER_CALLBACKS        0U /* HASH register callback disabled      */

@@ -15,6 +15,7 @@ namespace audio {
 		void init(OUTPUT_DEVICE output, FREQUENCY freq);
 
 		void setVolume(uint8_t volume);
+		uint8_t getVolume();
 		void mute();
 		void unmute();
 
@@ -22,6 +23,7 @@ namespace audio {
 		FMPI2C_HandleTypeDef* hfmpi2c1_;
 		I2S_HandleTypeDef* hi2s2_;
 		uint8_t address_;
+		uint8_t current_volume;
 
 		void(*reset_func_)();
 

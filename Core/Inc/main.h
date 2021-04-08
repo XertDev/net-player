@@ -50,6 +50,8 @@ extern "C" {
 
 /* USER CODE END EM */
 
+void HAL_TIM_MspPostInit(TIM_HandleTypeDef *htim);
+
 /* Exported functions prototypes ---------------------------------------------*/
 void Error_Handler(void);
 
@@ -64,8 +66,6 @@ void Error_Handler(void);
 #define LED1_RED_GPIO_Port GPIOE
 #define MEMS_LED_Pin GPIO_PIN_4
 #define MEMS_LED_GPIO_Port GPIOE
-#define LCD_BL_CTRL_Pin GPIO_PIN_5
-#define LCD_BL_CTRL_GPIO_Port GPIOE
 #define ARD_D5_Pin GPIO_PIN_6
 #define ARD_D5_GPIO_Port GPIOE
 #define OSC32_IN_Pin GPIO_PIN_14
@@ -96,12 +96,11 @@ void Error_Handler(void);
 #define ARD_D3_GPIO_Port GPIOF
 #define STLK_MCO_Pin GPIO_PIN_0
 #define STLK_MCO_GPIO_Port GPIOH
-#define WIFI_RST_Pin GPIO_PIN_1
-#define WIFI_RST_GPIO_Port GPIOH
 #define ARD_A0_Pin GPIO_PIN_0
 #define ARD_A0_GPIO_Port GPIOC
 #define CTP_INT_Pin GPIO_PIN_1
 #define CTP_INT_GPIO_Port GPIOC
+#define CTP_INT_EXTI_IRQn EXTI1_IRQn
 #define CODEC_ext_SD_Pin GPIO_PIN_2
 #define CODEC_ext_SD_GPIO_Port GPIOC
 #define CODEC_SD_Pin GPIO_PIN_3
@@ -132,6 +131,10 @@ void Error_Handler(void);
 #define ARD_A4_GPIO_Port GPIOB
 #define QSPI_CLK_Pin GPIO_PIN_2
 #define QSPI_CLK_GPIO_Port GPIOB
+#define SD_DETECT_Pin GPIO_PIN_11
+#define SD_DETECT_GPIO_Port GPIOF
+#define PSRAM_A6_Pin GPIO_PIN_12
+#define PSRAM_A6_GPIO_Port GPIOF
 #define PSRAM_A7_Pin GPIO_PIN_13
 #define PSRAM_A7_GPIO_Port GPIOF
 #define PSRAM_A8_Pin GPIO_PIN_14
@@ -142,24 +145,6 @@ void Error_Handler(void);
 #define PSRAM_A10_GPIO_Port GPIOG
 #define PSRAM_A11_Pin GPIO_PIN_1
 #define PSRAM_A11_GPIO_Port GPIOG
-#define LCD_PSRAM_D4_Pin GPIO_PIN_7
-#define LCD_PSRAM_D4_GPIO_Port GPIOE
-#define LCD_PSRAM_D5_Pin GPIO_PIN_8
-#define LCD_PSRAM_D5_GPIO_Port GPIOE
-#define LCD_PSRAM_D6_Pin GPIO_PIN_9
-#define LCD_PSRAM_D6_GPIO_Port GPIOE
-#define LCD_PSRAM_D7_Pin GPIO_PIN_10
-#define LCD_PSRAM_D7_GPIO_Port GPIOE
-#define LCD_PSRAM_D8_Pin GPIO_PIN_11
-#define LCD_PSRAM_D8_GPIO_Port GPIOE
-#define LCD_PSRAM_D9_Pin GPIO_PIN_12
-#define LCD_PSRAM_D9_GPIO_Port GPIOE
-#define LCD_PSRAM_D10_Pin GPIO_PIN_13
-#define LCD_PSRAM_D10_GPIO_Port GPIOE
-#define LCD_PSRAM_D11_Pin GPIO_PIN_14
-#define LCD_PSRAM_D11_GPIO_Port GPIOE
-#define LCD_PSRAM_D12_Pin GPIO_PIN_15
-#define LCD_PSRAM_D12_GPIO_Port GPIOE
 #define ARD_D15_Pin GPIO_PIN_10
 #define ARD_D15_GPIO_Port GPIOB
 #define ARD_D14_Pin GPIO_PIN_11
@@ -172,22 +157,12 @@ void Error_Handler(void);
 #define LCD_TE_GPIO_Port GPIOB
 #define WIFI_WKUP_Pin GPIO_PIN_15
 #define WIFI_WKUP_GPIO_Port GPIOB
-#define LCD_PSRAM_D13_Pin GPIO_PIN_8
-#define LCD_PSRAM_D13_GPIO_Port GPIOD
-#define LCD_PSRAM_D14_Pin GPIO_PIN_9
-#define LCD_PSRAM_D14_GPIO_Port GPIOD
-#define LCd_PSRAM_D15_Pin GPIO_PIN_10
-#define LCd_PSRAM_D15_GPIO_Port GPIOD
 #define PSRAM_A16_Pin GPIO_PIN_11
 #define PSRAM_A16_GPIO_Port GPIOD
 #define PSRAM_A17_Pin GPIO_PIN_12
 #define PSRAM_A17_GPIO_Port GPIOD
 #define QSPI_BK1_IO3_Pin GPIO_PIN_13
 #define QSPI_BK1_IO3_GPIO_Port GPIOD
-#define LCD_PSRAM_D0_Pin GPIO_PIN_14
-#define LCD_PSRAM_D0_GPIO_Port GPIOD
-#define LCD_PSRAM_D1_Pin GPIO_PIN_15
-#define LCD_PSRAM_D1_GPIO_Port GPIOD
 #define PSRAM_A12_Pin GPIO_PIN_2
 #define PSRAM_A12_GPIO_Port GPIOG
 #define PSRAM_A13_Pin GPIO_PIN_3
@@ -232,10 +207,6 @@ void Error_Handler(void);
 #define SD_D3_GPIO_Port GPIOC
 #define SD_CLK_Pin GPIO_PIN_12
 #define SD_CLK_GPIO_Port GPIOC
-#define LCD_PSRAM_D2_Pin GPIO_PIN_0
-#define LCD_PSRAM_D2_GPIO_Port GPIOD
-#define LCD_PSRAM_D3_Pin GPIO_PIN_1
-#define LCD_PSRAM_D3_GPIO_Port GPIOD
 #define DFSDM2_CKOUT_Pin GPIO_PIN_2
 #define DFSDM2_CKOUT_GPIO_Port GPIOD
 #define CODEC_CK_Pin GPIO_PIN_3

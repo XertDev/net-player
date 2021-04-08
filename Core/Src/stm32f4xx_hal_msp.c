@@ -59,7 +59,9 @@ extern DMA_HandleTypeDef hdma_spi2_tx;
 /* USER CODE BEGIN 0 */
 
 /* USER CODE END 0 */
-/**
+
+void HAL_TIM_MspPostInit(TIM_HandleTypeDef *htim);
+                    /**
   * Initializes the Global MSP.
   */
 void HAL_MspInit(void)
@@ -225,6 +227,9 @@ void HAL_I2S_MspInit(I2S_HandleTypeDef* hi2s)
 
     __HAL_LINKDMA(hi2s,hdmatx,hdma_spi2_tx);
 
+    /* I2S2 interrupt Init */
+    HAL_NVIC_SetPriority(SPI2_IRQn, 0, 0);
+    HAL_NVIC_EnableIRQ(SPI2_IRQn);
   /* USER CODE BEGIN SPI2_MspInit 1 */
 
   /* USER CODE END SPI2_MspInit 1 */
@@ -265,9 +270,62 @@ void HAL_I2S_MspDeInit(I2S_HandleTypeDef* hi2s)
 
     /* I2S2 DMA DeInit */
     HAL_DMA_DeInit(hi2s->hdmatx);
+
+    /* I2S2 interrupt DeInit */
+    HAL_NVIC_DisableIRQ(SPI2_IRQn);
   /* USER CODE BEGIN SPI2_MspDeInit 1 */
 
   /* USER CODE END SPI2_MspDeInit 1 */
+  }
+
+}
+
+/**
+* @brief LPTIM MSP Initialization
+* This function configures the hardware resources used in this example
+* @param hlptim: LPTIM handle pointer
+* @retval None
+*/
+void HAL_LPTIM_MspInit(LPTIM_HandleTypeDef* hlptim)
+{
+  if(hlptim->Instance==LPTIM1)
+  {
+  /* USER CODE BEGIN LPTIM1_MspInit 0 */
+
+  /* USER CODE END LPTIM1_MspInit 0 */
+    /* Peripheral clock enable */
+    __HAL_RCC_LPTIM1_CLK_ENABLE();
+    /* LPTIM1 interrupt Init */
+    HAL_NVIC_SetPriority(LPTIM1_IRQn, 0, 0);
+    HAL_NVIC_EnableIRQ(LPTIM1_IRQn);
+  /* USER CODE BEGIN LPTIM1_MspInit 1 */
+
+  /* USER CODE END LPTIM1_MspInit 1 */
+  }
+
+}
+
+/**
+* @brief LPTIM MSP De-Initialization
+* This function freeze the hardware resources used in this example
+* @param hlptim: LPTIM handle pointer
+* @retval None
+*/
+void HAL_LPTIM_MspDeInit(LPTIM_HandleTypeDef* hlptim)
+{
+  if(hlptim->Instance==LPTIM1)
+  {
+  /* USER CODE BEGIN LPTIM1_MspDeInit 0 */
+
+  /* USER CODE END LPTIM1_MspDeInit 0 */
+    /* Peripheral clock disable */
+    __HAL_RCC_LPTIM1_CLK_DISABLE();
+
+    /* LPTIM1 interrupt DeInit */
+    HAL_NVIC_DisableIRQ(LPTIM1_IRQn);
+  /* USER CODE BEGIN LPTIM1_MspDeInit 1 */
+
+  /* USER CODE END LPTIM1_MspDeInit 1 */
   }
 
 }
@@ -350,13 +408,19 @@ void HAL_SD_MspInit(SD_HandleTypeDef* hsd)
     GPIO_InitStruct.Alternate = GPIO_AF12_SDIO;
     HAL_GPIO_Init(SD_CMD_GPIO_Port, &GPIO_InitStruct);
 
-    GPIO_InitStruct.Pin = SD_D0_Pin|SD_D1_Pin|SD_D2_Pin|SD_D3_Pin
-                          |SD_CLK_Pin;
+    GPIO_InitStruct.Pin = SD_D0_Pin|SD_D1_Pin|SD_D2_Pin|SD_D3_Pin;
+    GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
+    GPIO_InitStruct.Pull = GPIO_PULLUP;
+    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
+    GPIO_InitStruct.Alternate = GPIO_AF12_SDIO;
+    HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
+
+    GPIO_InitStruct.Pin = SD_CLK_Pin;
     GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
     GPIO_InitStruct.Pull = GPIO_NOPULL;
     GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
     GPIO_InitStruct.Alternate = GPIO_AF12_SDIO;
-    HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
+    HAL_GPIO_Init(SD_CLK_GPIO_Port, &GPIO_InitStruct);
 
   /* USER CODE BEGIN SDIO_MspInit 1 */
 
@@ -401,6 +465,96 @@ void HAL_SD_MspDeInit(SD_HandleTypeDef* hsd)
 
 }
 
+/**
+* @brief TIM_PWM MSP Initialization
+* This function configures the hardware resources used in this example
+* @param htim_pwm: TIM_PWM handle pointer
+* @retval None
+*/
+void HAL_TIM_PWM_MspInit(TIM_HandleTypeDef* htim_pwm)
+{
+  GPIO_InitTypeDef GPIO_InitStruct = {0};
+  if(htim_pwm->Instance==TIM9)
+  {
+  /* USER CODE BEGIN TIM9_MspInit 0 */
+
+  /* USER CODE END TIM9_MspInit 0 */
+    /* Peripheral clock enable */
+    __HAL_RCC_TIM9_CLK_ENABLE();
+
+    __HAL_RCC_GPIOE_CLK_ENABLE();
+    /**TIM9 GPIO Configuration
+    PE6     ------> TIM9_CH2
+    */
+    GPIO_InitStruct.Pin = ARD_D5_Pin;
+    GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
+    GPIO_InitStruct.Pull = GPIO_NOPULL;
+    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+    GPIO_InitStruct.Alternate = GPIO_AF3_TIM9;
+    HAL_GPIO_Init(ARD_D5_GPIO_Port, &GPIO_InitStruct);
+
+  /* USER CODE BEGIN TIM9_MspInit 1 */
+
+  /* USER CODE END TIM9_MspInit 1 */
+  }
+
+}
+
+void HAL_TIM_MspPostInit(TIM_HandleTypeDef* htim)
+{
+  GPIO_InitTypeDef GPIO_InitStruct = {0};
+  if(htim->Instance==TIM9)
+  {
+  /* USER CODE BEGIN TIM9_MspPostInit 0 */
+
+  /* USER CODE END TIM9_MspPostInit 0 */
+
+    __HAL_RCC_GPIOE_CLK_ENABLE();
+    /**TIM9 GPIO Configuration
+    PE5     ------> TIM9_CH1
+    */
+    GPIO_InitStruct.Pin = GPIO_PIN_5;
+    GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
+    GPIO_InitStruct.Pull = GPIO_NOPULL;
+    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+    GPIO_InitStruct.Alternate = GPIO_AF3_TIM9;
+    HAL_GPIO_Init(GPIOE, &GPIO_InitStruct);
+
+  /* USER CODE BEGIN TIM9_MspPostInit 1 */
+
+  /* USER CODE END TIM9_MspPostInit 1 */
+  }
+
+}
+/**
+* @brief TIM_PWM MSP De-Initialization
+* This function freeze the hardware resources used in this example
+* @param htim_pwm: TIM_PWM handle pointer
+* @retval None
+*/
+void HAL_TIM_PWM_MspDeInit(TIM_HandleTypeDef* htim_pwm)
+{
+  if(htim_pwm->Instance==TIM9)
+  {
+  /* USER CODE BEGIN TIM9_MspDeInit 0 */
+
+  /* USER CODE END TIM9_MspDeInit 0 */
+    /* Peripheral clock disable */
+    __HAL_RCC_TIM9_CLK_DISABLE();
+
+    /**TIM9 GPIO Configuration
+    PE5     ------> TIM9_CH1
+    PE6     ------> TIM9_CH2
+    */
+    HAL_GPIO_DeInit(GPIOE, GPIO_PIN_5|ARD_D5_Pin);
+
+  /* USER CODE BEGIN TIM9_MspDeInit 1 */
+
+  /* USER CODE END TIM9_MspDeInit 1 */
+  }
+
+}
+
 static uint32_t FSMC_Initialized = 0;
 
 static void HAL_FSMC_MspInit(void){
@@ -430,27 +584,43 @@ static void HAL_FSMC_MspInit(void){
   PG0   ------> FSMC_A10
   PG1   ------> FSMC_A11
   PE7   ------> FSMC_D4
+  PE7   ------> FSMC_DA4
   PE8   ------> FSMC_D5
+  PE8   ------> FSMC_DA5
   PE9   ------> FSMC_D6
+  PE9   ------> FSMC_DA6
   PE10   ------> FSMC_D7
+  PE10   ------> FSMC_DA7
   PE11   ------> FSMC_D8
+  PE11   ------> FSMC_DA8
   PE12   ------> FSMC_D9
+  PE12   ------> FSMC_DA9
   PE13   ------> FSMC_D10
+  PE13   ------> FSMC_DA10
   PE14   ------> FSMC_D11
+  PE14   ------> FSMC_DA11
   PE15   ------> FSMC_D12
+  PE15   ------> FSMC_DA12
   PD8   ------> FSMC_D13
+  PD8   ------> FSMC_DA13
   PD9   ------> FSMC_D14
+  PD9   ------> FSMC_DA14
   PD10   ------> FSMC_D15
+  PD10   ------> FSMC_DA15
   PD11   ------> FSMC_A16
   PD12   ------> FSMC_A17
   PD14   ------> FSMC_D0
+  PD14   ------> FSMC_DA0
   PD15   ------> FSMC_D1
+  PD15   ------> FSMC_DA1
   PG2   ------> FSMC_A12
   PG3   ------> FSMC_A13
   PG4   ------> FSMC_A14
   PG5   ------> FSMC_A15
   PD0   ------> FSMC_D2
+  PD0   ------> FSMC_DA2
   PD1   ------> FSMC_D3
+  PD1   ------> FSMC_DA3
   PD4   ------> FSMC_NOE
   PD5   ------> FSMC_NWE
   PD7   ------> FSMC_NE1
@@ -459,10 +629,10 @@ static void HAL_FSMC_MspInit(void){
   PE1   ------> FSMC_NBL1
   */
   GPIO_InitStruct.Pin = PSRAM_A0_Pin|PSRAM_A1_Pin|PSRAM_A2_Pin|PSRAM_A3_Pin
-                          |PSRAM_A4_Pin|PSRAM_A5_Pin|GPIO_PIN_12|PSRAM_A7_Pin
+                          |PSRAM_A4_Pin|PSRAM_A5_Pin|PSRAM_A6_Pin|PSRAM_A7_Pin
                           |PSRAM_A8_Pin|PSRAM_A9_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Pull = GPIO_PULLUP;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
   GPIO_InitStruct.Alternate = GPIO_AF12_FSMC;
   HAL_GPIO_Init(GPIOF, &GPIO_InitStruct);
@@ -470,25 +640,38 @@ static void HAL_FSMC_MspInit(void){
   GPIO_InitStruct.Pin = PSRAM_A10_Pin|PSRAM_A11_Pin|PSRAM_A12_Pin|PSRAM_A13_Pin
                           |PSRAM_A14_Pin|PSRAM_A15_Pin|LCD_NE3_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Pull = GPIO_PULLUP;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
   GPIO_InitStruct.Alternate = GPIO_AF12_FSMC;
   HAL_GPIO_Init(GPIOG, &GPIO_InitStruct);
 
-  GPIO_InitStruct.Pin = LCD_PSRAM_D4_Pin|LCD_PSRAM_D5_Pin|LCD_PSRAM_D6_Pin|LCD_PSRAM_D7_Pin
-                          |LCD_PSRAM_D8_Pin|LCD_PSRAM_D9_Pin|LCD_PSRAM_D10_Pin|LCD_PSRAM_D11_Pin
-                          |LCD_PSRAM_D12_Pin|PSRAM_NBL0_Pin|PSRAM_NBL1_Pin;
+  GPIO_InitStruct.Pin = GPIO_PIN_7|GPIO_PIN_8|PSRAM_NBL0_Pin|PSRAM_NBL1_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
   GPIO_InitStruct.Alternate = GPIO_AF12_FSMC;
   HAL_GPIO_Init(GPIOE, &GPIO_InitStruct);
 
-  GPIO_InitStruct.Pin = LCD_PSRAM_D13_Pin|LCD_PSRAM_D14_Pin|LCd_PSRAM_D15_Pin|PSRAM_A16_Pin
-                          |PSRAM_A17_Pin|LCD_PSRAM_D0_Pin|LCD_PSRAM_D1_Pin|LCD_PSRAM_D2_Pin
-                          |LCD_PSRAM_D3_Pin|LCD_PSRAM_NOE_Pin|LCD_PSRAM_NWE_Pin|PSRAM_NE1_Pin;
+  GPIO_InitStruct.Pin = GPIO_PIN_9|GPIO_PIN_10|GPIO_PIN_11|GPIO_PIN_12
+                          |GPIO_PIN_13|GPIO_PIN_14|GPIO_PIN_15;
+  GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
+  GPIO_InitStruct.Pull = GPIO_PULLUP;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
+  GPIO_InitStruct.Alternate = GPIO_AF12_FSMC;
+  HAL_GPIO_Init(GPIOE, &GPIO_InitStruct);
+
+  GPIO_InitStruct.Pin = GPIO_PIN_8|GPIO_PIN_9|GPIO_PIN_10|GPIO_PIN_14
+                          |GPIO_PIN_15;
   GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
+  GPIO_InitStruct.Alternate = GPIO_AF12_FSMC;
+  HAL_GPIO_Init(GPIOD, &GPIO_InitStruct);
+
+  GPIO_InitStruct.Pin = PSRAM_A16_Pin|PSRAM_A17_Pin|GPIO_PIN_0|GPIO_PIN_1
+                          |LCD_PSRAM_NOE_Pin|LCD_PSRAM_NWE_Pin|PSRAM_NE1_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
+  GPIO_InitStruct.Pull = GPIO_PULLUP;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
   GPIO_InitStruct.Alternate = GPIO_AF12_FSMC;
   HAL_GPIO_Init(GPIOD, &GPIO_InitStruct);
@@ -535,27 +718,43 @@ static void HAL_FSMC_MspDeInit(void){
   PG0   ------> FSMC_A10
   PG1   ------> FSMC_A11
   PE7   ------> FSMC_D4
+  PE7   ------> FSMC_DA4
   PE8   ------> FSMC_D5
+  PE8   ------> FSMC_DA5
   PE9   ------> FSMC_D6
+  PE9   ------> FSMC_DA6
   PE10   ------> FSMC_D7
+  PE10   ------> FSMC_DA7
   PE11   ------> FSMC_D8
+  PE11   ------> FSMC_DA8
   PE12   ------> FSMC_D9
+  PE12   ------> FSMC_DA9
   PE13   ------> FSMC_D10
+  PE13   ------> FSMC_DA10
   PE14   ------> FSMC_D11
+  PE14   ------> FSMC_DA11
   PE15   ------> FSMC_D12
+  PE15   ------> FSMC_DA12
   PD8   ------> FSMC_D13
+  PD8   ------> FSMC_DA13
   PD9   ------> FSMC_D14
+  PD9   ------> FSMC_DA14
   PD10   ------> FSMC_D15
+  PD10   ------> FSMC_DA15
   PD11   ------> FSMC_A16
   PD12   ------> FSMC_A17
   PD14   ------> FSMC_D0
+  PD14   ------> FSMC_DA0
   PD15   ------> FSMC_D1
+  PD15   ------> FSMC_DA1
   PG2   ------> FSMC_A12
   PG3   ------> FSMC_A13
   PG4   ------> FSMC_A14
   PG5   ------> FSMC_A15
   PD0   ------> FSMC_D2
+  PD0   ------> FSMC_DA2
   PD1   ------> FSMC_D3
+  PD1   ------> FSMC_DA3
   PD4   ------> FSMC_NOE
   PD5   ------> FSMC_NWE
   PD7   ------> FSMC_NE1
@@ -564,19 +763,19 @@ static void HAL_FSMC_MspDeInit(void){
   PE1   ------> FSMC_NBL1
   */
   HAL_GPIO_DeInit(GPIOF, PSRAM_A0_Pin|PSRAM_A1_Pin|PSRAM_A2_Pin|PSRAM_A3_Pin
-                          |PSRAM_A4_Pin|PSRAM_A5_Pin|GPIO_PIN_12|PSRAM_A7_Pin
+                          |PSRAM_A4_Pin|PSRAM_A5_Pin|PSRAM_A6_Pin|PSRAM_A7_Pin
                           |PSRAM_A8_Pin|PSRAM_A9_Pin);
 
   HAL_GPIO_DeInit(GPIOG, PSRAM_A10_Pin|PSRAM_A11_Pin|PSRAM_A12_Pin|PSRAM_A13_Pin
                           |PSRAM_A14_Pin|PSRAM_A15_Pin|LCD_NE3_Pin);
 
-  HAL_GPIO_DeInit(GPIOE, LCD_PSRAM_D4_Pin|LCD_PSRAM_D5_Pin|LCD_PSRAM_D6_Pin|LCD_PSRAM_D7_Pin
-                          |LCD_PSRAM_D8_Pin|LCD_PSRAM_D9_Pin|LCD_PSRAM_D10_Pin|LCD_PSRAM_D11_Pin
-                          |LCD_PSRAM_D12_Pin|PSRAM_NBL0_Pin|PSRAM_NBL1_Pin);
+  HAL_GPIO_DeInit(GPIOE, GPIO_PIN_7|GPIO_PIN_8|GPIO_PIN_9|GPIO_PIN_10
+                          |GPIO_PIN_11|GPIO_PIN_12|GPIO_PIN_13|GPIO_PIN_14
+                          |GPIO_PIN_15|PSRAM_NBL0_Pin|PSRAM_NBL1_Pin);
 
-  HAL_GPIO_DeInit(GPIOD, LCD_PSRAM_D13_Pin|LCD_PSRAM_D14_Pin|LCd_PSRAM_D15_Pin|PSRAM_A16_Pin
-                          |PSRAM_A17_Pin|LCD_PSRAM_D0_Pin|LCD_PSRAM_D1_Pin|LCD_PSRAM_D2_Pin
-                          |LCD_PSRAM_D3_Pin|LCD_PSRAM_NOE_Pin|LCD_PSRAM_NWE_Pin|PSRAM_NE1_Pin);
+  HAL_GPIO_DeInit(GPIOD, GPIO_PIN_8|GPIO_PIN_9|GPIO_PIN_10|PSRAM_A16_Pin
+                          |PSRAM_A17_Pin|GPIO_PIN_14|GPIO_PIN_15|GPIO_PIN_0
+                          |GPIO_PIN_1|LCD_PSRAM_NOE_Pin|LCD_PSRAM_NWE_Pin|PSRAM_NE1_Pin);
 
   /* USER CODE BEGIN FSMC_MspDeInit 1 */
 
