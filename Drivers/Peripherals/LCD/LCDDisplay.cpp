@@ -6,11 +6,7 @@
 #include "fonts.hpp"
 #include "stdint.h"
 
-LCDDisplay::LCDDisplay(
-		LCDIOSettings io_settings
-		)
-:io_settings_(io_settings)
-{
+LCDDisplay::LCDDisplay(LCDIOSettings io_settings):io_settings_(io_settings) {
 	initLCD();
 }
 

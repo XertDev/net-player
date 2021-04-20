@@ -3,6 +3,7 @@
 #include "PeripheralsPack.hpp"
 #include "LCD/LCDDisplay.hpp"
 #include "AudioCodec/AudioCodec.hpp"
+#include "Touch/TouchPanel.hpp"
 #include "StationInput/StationInput.hpp"
 #include "RadioView/RadioView.hpp"
 
@@ -11,6 +12,8 @@ extern TIM_HandleTypeDef htim9;
 extern SD_HandleTypeDef hsd;
 extern FMPI2C_HandleTypeDef hfmpi2c1;
 extern I2S_HandleTypeDef hi2s2;
+
+extern bool detected_touch;
 
 void resetFMPI2C() {
 	HAL_FMPI2C_DeInit(&hfmpi2c1);
@@ -43,19 +46,30 @@ LCDIOSettings settings {
 	(LCDController*)(0x60000000 | 0x08000000)
 };
 
+uint8_t touches = 0;
+uint8_t gesture = 0;
+touch::TouchPoint point;
+touch::TouchDetails details;
+
 extern "C" void main_cpp();
 void main_cpp() {
 	/* Init peripherals */
 	PeripheralsPack pack {
 		LCDDisplay(settings),
+		touch::TouchPanel(&hfmpi2c1, 0x70, 240, 240, &resetFMPI2C),
 		Storage(),
 		audio::AudioCodec(&hfmpi2c1, &hi2s2, 0x34, &resetFMPI2C)
 	};
 
 	pack.lcd_display.init();
+	pack.lcd_display.setOrientation(ST7789H2::ORIENTATION::LANDSCAPE_ROT180);
+
+	pack.touch_panel.setPollingMode();
+	pack.touch_panel.id();
+	pack.touch_panel.setThreshhold(20);
 
 	pack.codec.init(audio::OUTPUT_DEVICE::HEADPHONE, audio::FREQUENCY::FREQ_44K);
-	pack.codec.setVolume(2);
+	pack.codec.setVolume(100);
 
 	uint8_t modes_stack[16] = {1, 0};
 	void (*modes[])(uint8_t* modes_stack, PeripheralsPack& pack) =
