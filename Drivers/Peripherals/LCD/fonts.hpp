@@ -4,7 +4,7 @@
 #include "Common.hpp"
 
 extern Font Font24;
-
+extern Font IconFont24;
 
 
 #endif /* LCD_FONTS_HPP_ */

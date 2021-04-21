@@ -40,6 +40,7 @@ public:
 	void drawRect(uint16_t x, uint16_t y, uint16_t width, uint16_t height, Color color);
 	void fillRect(uint16_t x, uint16_t y, uint16_t width, uint16_t height, Color color);
 
+	void drawIcon(uint16_t x, uint16_t y, Icons icon);
 	void drawChar(uint16_t x, uint16_t y, char sym);
 	void drawString(uint16_t x, uint16_t y, const char* text);
 

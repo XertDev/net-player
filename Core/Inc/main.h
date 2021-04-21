@@ -96,6 +96,8 @@ void Error_Handler(void);
 #define ARD_D3_GPIO_Port GPIOF
 #define STLK_MCO_Pin GPIO_PIN_0
 #define STLK_MCO_GPIO_Port GPIOH
+#define WIFI_RST_Pin GPIO_PIN_1
+#define WIFI_RST_GPIO_Port GPIOH
 #define ARD_A0_Pin GPIO_PIN_0
 #define ARD_A0_GPIO_Port GPIOC
 #define CTP_INT_Pin GPIO_PIN_1

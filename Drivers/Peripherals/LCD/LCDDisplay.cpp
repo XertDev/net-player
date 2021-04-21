@@ -36,6 +36,7 @@ LCDError LCDDisplay::init() {
 	properties_.background_color = 0xFFFF;
 	properties_.text_color = 0x0000;
 	properties_.font = &Font24;
+	properties_.icon_font = &IconFont24;
 
 	resetLCD();
 
@@ -287,6 +288,40 @@ void LCDDisplay::fillRect(uint16_t x, uint16_t y, uint16_t width,
 	}
 }
 
+void LCDDisplay::drawIcon(uint16_t x, uint16_t y, Icons icon) {
+	const auto &height = properties_.font->height;
+	const auto &width = properties_.font->width;
+	const uint8_t font_width_bytes = (width + 7) / 8;
+	const uint8_t *icon_data = &properties_.icon_font->table[icon];
+
+	const uint16_t offset = 8 * font_width_bytes - width;
+	uint32_t line = 0;
+
+	for (uint16_t i = 0; i < height; ++i) {
+		const uint8_t *pchar = (uint8_t*) icon_data + font_width_bytes * i;
+		switch (font_width_bytes) {
+		case 1:
+			line = pchar[0];
+			break;
+
+		case 2:
+			line = (pchar[0] << 8) | pchar[1];
+			break;
+
+		case 3:
+		default:
+			line = (pchar[0] << 16) | (pchar[1] << 8) | pchar[2];
+		}
+
+		for (uint16_t j = 0; j < width; ++j) {
+			if (line & (1 << (width - j + offset - 1))) {
+				drawPixel(x + j, y + i, properties_.text_color);
+			} else {
+				drawPixel(x + j, y + i, properties_.background_color);
+			}
+		}
+	}
+}
 void LCDDisplay::drawChar(uint16_t x, uint16_t y, char sym) {
 	//based on official draw char from CUBE MX
 	const auto& height = properties_.font->height;

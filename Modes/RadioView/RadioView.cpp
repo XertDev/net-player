@@ -1,4 +1,6 @@
 #include <stdio.h>
+#include <string.h>
+#include <algorithm>
 #include <math.h>
 #include "RadioView.hpp"
 #include "stm32f4xx_hal.h"
@@ -11,9 +13,9 @@ extern I2S_HandleTypeDef hi2s2;
 extern bool detected_touch;
 
 static void draw_background(LCDDisplay& display);
-static void draw_station_name(LCDDisplay& display);
-static void draw_station_info(LCDDisplay& display);
-static void draw_volume_info(LCDDisplay& display, uint8_t offset);
+static void draw_station_name(LCDDisplay& display, const char* station_name);
+static void draw_music_info(LCDDisplay& display, const char* music_info, uint8_t offset);
+static void draw_volume_info(LCDDisplay& display);
 static void update_volume_info(LCDDisplay& display, audio::AudioCodec& codec);
 static void draw_station_change_button(LCDDisplay& display);
 
@@ -30,9 +32,9 @@ void radioView(uint8_t* modes_stack, PeripheralsPack& pack) {
 		HAL_Delay(5);
 	}
 
-	draw_station_name(pack.lcd_display);
-	draw_station_info(pack.lcd_display);
-	draw_volume_info(pack.lcd_display, 0);
+	draw_station_name(pack.lcd_display, "RMF");
+	draw_music_info(pack.lcd_display, "", 0);
+	draw_volume_info(pack.lcd_display);
 	update_volume_info(pack.lcd_display, pack.codec);
 	draw_station_change_button(pack.lcd_display);
 	// TODO: Handle volume change and display changed volume
@@ -41,11 +43,39 @@ void radioView(uint8_t* modes_stack, PeripheralsPack& pack) {
 
 	//play_tone();
 
+	char* music_info = "no info";
+	uint8_t info_offset = 0;
+	uint8_t info_move_delay_ticks = 10;
+	uint8_t info_stop_delay_ticks = 10;
+	size_t info_len = strlen(music_info);
 
 	/* Main Loop */
 	bool should_change_view = false;
 	auto& touch_panel = pack.touch_panel;
 	while(true) {
+		HAL_Delay(100);
+		// TODO: Get music info
+		char* new_music_info = "get info from station";
+		if(strcmp(music_info, new_music_info) != 0) {
+			// Reset offset so that
+			music_info = new_music_info;
+			info_offset = 0;
+			info_move_delay_ticks = 10;
+			info_stop_delay_ticks = 10;
+			info_len = strlen(music_info);
+		} else {
+			if(info_len <= 14) {
+
+			} else if(info_move_delay_ticks > 0) {
+				--info_move_delay_ticks;
+			} else {
+				info_offset = (info_offset + 1) % info_len;
+				if(info_offset == 0) {
+					info_move_delay_ticks = 10;
+				}
+			}
+		}
+		draw_music_info(pack.lcd_display, music_info, info_offset);
 
 		while(detected_touch) {
 
@@ -77,21 +107,32 @@ static void draw_background(LCDDisplay& display) {
 	display.setTextColor(text_color_white);
 }
 
-static void draw_station_name(LCDDisplay& display) {
+static void draw_station_name(LCDDisplay& display, const char* station_name) {
 	display.setBackgroundColor(background_color_dark);
 	// TODO: Consider aligning station name horizontally
-	display.drawString(8, 8, "RMF");
+	display.drawString(120 - (strlen(station_name)*17)/2, 8, station_name);
 	display.drawHLine(0, 40, 240, line_color_lightgrey);
 }
 
-static void draw_station_info(LCDDisplay& display) {
-	display.setBackgroundColor(background_color_dark);
-	// TODO: Consider aligning station name horizontally
-	display.drawString(8, 48, "Some Song - Some artists");
-	display.drawHLine(0, 40, 240, line_color_lightgrey);
+static void draw_add_to_fav_button(LCDDisplay& display) {
+
 }
 
-static void draw_volume_info(LCDDisplay& display, uint8_t offset) {
+static void clear_music_info_area(LCDDisplay& display, const char* music_info, uint8_t offset) {
+	display.setBackgroundColor(background_color_dark);
+}
+static void draw_music_info(LCDDisplay& display, const char* music_info, uint8_t offset) {
+	display.setBackgroundColor(background_color_dark);
+	uint8_t char_count = std::min(strlen(music_info) - offset, (size_t)14);
+	char substr[14];
+	strncpy(substr, music_info + offset, char_count);
+	for(int i = char_count; i < 14; ++i) {
+		substr[i] = ' ';
+	}
+	display.drawString(2, 48, substr);
+}
+
+static void draw_volume_info(LCDDisplay& display) {
 	display.setBackgroundColor(background_color_dark);
 	display.drawString(10, 130, "Vol: ");
 }
@@ -108,7 +149,6 @@ static void draw_station_change_button(LCDDisplay& display) {
 	display.setBackgroundColor(button_color_orange);
 	display.drawString(8, 198, "Change station");
 }
-
 
 static void play_tone(void) {
     for (int i = 0; i < BUFFER_SIZE; i++) {

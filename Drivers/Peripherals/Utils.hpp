@@ -6,6 +6,4 @@ inline bool inRange(T value, A min, B max) {
 	return value <= max && value >= min;
 }
 
-
-
-#endif /* UTILS_HPP_ */
+#endif UTILS_HPP_
