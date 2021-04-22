@@ -7,7 +7,13 @@
 #include "Touch/TouchPanel.hpp"
 #include "StationInput/StationInput.hpp"
 #include "RadioView/RadioView.hpp"
+<<<<<<< HEAD
 #include <cstdio>
+=======
+#include "FavStationList/FavStationList.hpp"
+#include "StationSelectChoiceView/StationSelectChoiceView.hpp"
+#include "WifiPanel/WifiPanel.hpp"
+>>>>>>> fav_stations_view
 
 
 extern TIM_HandleTypeDef htim9;
@@ -90,8 +96,11 @@ void main_cpp() {
 	uint8_t modes_stack[16] = {1, 0};
 	void (*modes[])(uint8_t* modes_stack, PeripheralsPack& pack) =
 	{
+		stationSelectChoiceView,
+		favStationList,
+		stationInput,
+		wifiPanel,
 		radioView,
-		stationInput
 	};
 
 	while(true) {

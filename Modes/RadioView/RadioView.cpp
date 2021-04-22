@@ -27,16 +27,18 @@ static void play_tone(void);
 
 void radioView(uint8_t* modes_stack, PeripheralsPack& pack) {
 	draw_background(pack.lcd_display);
-	for(uint8_t i = pack.lcd_display.backlight(); i <= target_backlight_level; ++i) {
-		pack.lcd_display.setBacklight(i);
-		HAL_Delay(5);
-	}
 
 	draw_station_name(pack.lcd_display, "RMF");
 	draw_music_info(pack.lcd_display, "", 0);
 	draw_volume_info(pack.lcd_display);
 	update_volume_info(pack.lcd_display, pack.codec);
 	draw_station_change_button(pack.lcd_display);
+
+	for(uint8_t i = pack.lcd_display.backlight(); i <= target_backlight_level; ++i) {
+		pack.lcd_display.setBacklight(i);
+		HAL_Delay(5);
+	}
+
 	// TODO: Handle volume change and display changed volume
 
 	// TODO: Handle extracting current station info and displaying it on the screen
@@ -46,7 +48,6 @@ void radioView(uint8_t* modes_stack, PeripheralsPack& pack) {
 	char* music_info = "no info";
 	uint8_t info_offset = 0;
 	uint8_t info_move_delay_ticks = 10;
-	uint8_t info_stop_delay_ticks = 10;
 	size_t info_len = strlen(music_info);
 
 	/* Main Loop */
@@ -61,7 +62,6 @@ void radioView(uint8_t* modes_stack, PeripheralsPack& pack) {
 			music_info = new_music_info;
 			info_offset = 0;
 			info_move_delay_ticks = 10;
-			info_stop_delay_ticks = 10;
 			info_len = strlen(music_info);
 		} else {
 			if(info_len <= 14) {
@@ -83,12 +83,12 @@ void radioView(uint8_t* modes_stack, PeripheralsPack& pack) {
 				auto touch_details = touch_panel.getDetails(0);
 				if(touch_details.event_type == 1) {
 					auto touch_info = touch_panel.getPoint(0);
-					if(inRange(touch_info.x, 190, 230) && inRange(touch_info.y, 0, 240)) {
+					if(inRange(touch_info.x, 0, 240) && inRange(touch_info.y, 190, 230)) {
 						uint8_t* last = modes_stack;
 						while (*last != 0) {
 							++last;
 						}
-						*last = 2;
+						*last = 1;
 						should_change_view = true;
 					}
 				}
