@@ -1,3 +1,4 @@
+#include <Wifi/Wifi.hpp>
 #include "../stm32f4xx_hal.h"
 #include "main.h"
 #include "PeripheralsPack.hpp"
@@ -6,12 +7,15 @@
 #include "Touch/TouchPanel.hpp"
 #include "StationInput/StationInput.hpp"
 #include "RadioView/RadioView.hpp"
+#include <cstdio>
 
 
 extern TIM_HandleTypeDef htim9;
 extern SD_HandleTypeDef hsd;
 extern FMPI2C_HandleTypeDef hfmpi2c1;
 extern I2S_HandleTypeDef hi2s2;
+extern SPI_HandleTypeDef hspi3;
+
 
 extern bool detected_touch;
 
@@ -46,6 +50,14 @@ LCDIOSettings settings {
 	(LCDController*)(0x60000000 | 0x08000000)
 };
 
+wifi::WifiIOSettings wifi_settings {
+	{WIFI_RST_GPIO_Port, WIFI_RST_Pin},
+	{WIFI_WKUP_GPIO_Port, WIFI_WKUP_Pin},
+	{WIFI_SPI_CSN_GPIO_Port, WIFI_SPI_CSN_Pin},
+	{WIFI_DRDY_GPIO_Port, WIFI_DRDY_Pin},
+	hspi3
+};
+
 uint8_t touches = 0;
 uint8_t gesture = 0;
 touch::TouchPoint point;
@@ -54,6 +66,10 @@ touch::TouchDetails details;
 extern "C" void main_cpp();
 void main_cpp() {
 	/* Init peripherals */
+	wifi::Wifi wifi(wifi_settings);
+
+	wifi.scan();
+
 	PeripheralsPack pack {
 		LCDDisplay(settings),
 		touch::TouchPanel(&hfmpi2c1, 0x70, 240, 240, &resetFMPI2C),
