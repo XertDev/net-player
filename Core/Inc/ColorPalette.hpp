@@ -19,3 +19,7 @@ constexpr Color button_color_4 = from_r8g8b8(137, 246, 59);
 constexpr Color button_color_lightgreen = button_color_4;
 constexpr Color button_color_5 = from_r8g8b8(244, 60, 109);
 constexpr Color button_color_pink = button_color_5;
+constexpr Color button_color_6 = from_r8g8b8(0, 51, 204);
+constexpr Color button_color_darkblue = button_color_6;
+constexpr Color button_color_7 = from_r8g8b8(61, 210, 192);
+constexpr Color button_color_darkcyan = button_color_7;
