@@ -83,12 +83,12 @@ void radioView(uint8_t* modes_stack, PeripheralsPack& pack) {
 				auto touch_details = touch_panel.getDetails(0);
 				if(touch_details.event_type == 1) {
 					auto touch_info = touch_panel.getPoint(0);
-					if(inRange(touch_info.x, 190, 230) && inRange(touch_info.y, 0, 240)) {
+					if(inRange(touch_info.x, 0, 240) && inRange(touch_info.y, 190, 230)) {
 						uint8_t* last = modes_stack;
 						while (*last != 0) {
 							++last;
 						}
-						*last = 2;
+						*last = 1;
 						should_change_view = true;
 					}
 				}

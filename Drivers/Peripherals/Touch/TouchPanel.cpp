@@ -94,8 +94,8 @@ touch::TouchPoint touch::TouchPanel::getPoint(uint8_t index) {
 	}
 
 	TouchPoint point;
-	point.x = (((raw_position[0] & MSB_MASK) << 8) | (raw_position[1] & LSB_MASK));
-	point.y = (((raw_position[2] & MSB_MASK) << 8) | (raw_position[3] & LSB_MASK));
+	point.y = (((raw_position[0] & MSB_MASK) << 8) | (raw_position[1] & LSB_MASK));
+	point.x = 240 - (((raw_position[2] & MSB_MASK) << 8) | (raw_position[3] & LSB_MASK));
 
 	return point;
 }

@@ -4,17 +4,22 @@
 #include "ColorPalette.hpp"
 #include "Utils.hpp"
 
+extern bool detected_touch;
+
 constexpr uint8_t target_backlight_level = 100;
 
 
 static void draw_background(LCDDisplay& display);
 static void draw_scroll_buttons(LCDDisplay& display);
-static void draw_scroll(LCDDisplay& display);
-static void draw_station_area_element(LCDDisplay& display, uint8_t index);
+static void draw_scroll(LCDDisplay& display, uint8_t index, uint8_t area_count);
+static void draw_station_area_element(LCDDisplay& display, const char* station_label, uint8_t index);
 
 void favStationList(uint8_t* modes_stack, PeripheralsPack& pack) {
 	draw_background(pack.lcd_display);
 	draw_scroll_buttons(pack.lcd_display);
+
+	draw_scroll(pack.lcd_display, 2, 5);
+	draw_station_area_element(pack.lcd_display, "Turbo-op-stacja", 0);
 
 
 	for(uint8_t i = pack.lcd_display.backlight(); i <= target_backlight_level; ++i) {
@@ -22,8 +27,30 @@ void favStationList(uint8_t* modes_stack, PeripheralsPack& pack) {
 		HAL_Delay(5);
 	}
 
-	while(true) {
+	// TODO: This is temporary, change whole main loop
+	bool should_change_view = false;
+	auto& touch_panel = pack.touch_panel;
+	while (true) {
+		while (detected_touch) {
 
+			if (touch_panel.detectTouch() == 1) {
+				auto touch_details = touch_panel.getDetails(0);
+				if (touch_details.event_type == 1) {
+					auto touch_info = touch_panel.getPoint(0);
+					if (inRange(touch_info.x, 0, 240) && inRange(touch_info.y, 0, 240)) {
+						uint8_t *last = modes_stack;
+						while (*last != 0) {
+							++last;
+						}
+						*last = 5;
+						should_change_view = true;
+					}
+				}
+			}
+		}
+		if (should_change_view) {
+			break;
+		}
 	}
 }
 

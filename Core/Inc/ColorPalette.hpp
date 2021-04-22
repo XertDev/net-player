@@ -33,3 +33,5 @@ constexpr Color button_color_11 = from_r8g8b8(255, 94, 94);
 constexpr Color button_color_lightred = button_color_11;
 constexpr Color button_color_12 = from_r8g8b8(170, 170, 170);
 constexpr Color button_color_grey = button_color_12;
+constexpr Color button_color_13 = from_r8g8b8(252, 218, 0);
+constexpr Color button_color_yellow = button_color_13;
