@@ -5,6 +5,7 @@
 #include "Storage/Storage.hpp"
 #include "AudioCodec/AudioCodec.hpp"
 #include "Touch/TouchPanel.hpp"
+#include "Wifi/Wifi.hpp"
 
 
 
@@ -14,6 +15,7 @@ struct PeripheralsPack
 	touch::TouchPanel touch_panel;
 	Storage storage;
 	audio::AudioCodec codec;
+	wifi::Wifi wifi;
 };
 
 

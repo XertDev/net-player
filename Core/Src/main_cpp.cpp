@@ -7,13 +7,9 @@
 #include "Touch/TouchPanel.hpp"
 #include "StationInput/StationInput.hpp"
 #include "RadioView/RadioView.hpp"
-<<<<<<< HEAD
-#include <cstdio>
-=======
 #include "FavStationList/FavStationList.hpp"
 #include "StationSelectChoiceView/StationSelectChoiceView.hpp"
 #include "WifiPanel/WifiPanel.hpp"
->>>>>>> fav_stations_view
 
 
 extern TIM_HandleTypeDef htim9;
@@ -72,15 +68,13 @@ touch::TouchDetails details;
 extern "C" void main_cpp();
 void main_cpp() {
 	/* Init peripherals */
-	wifi::Wifi wifi(wifi_settings);
-
-	wifi.scan();
 
 	PeripheralsPack pack {
 		LCDDisplay(settings),
 		touch::TouchPanel(&hfmpi2c1, 0x70, 240, 240, &resetFMPI2C),
 		Storage(),
-		audio::AudioCodec(&hfmpi2c1, &hi2s2, 0x34, &resetFMPI2C)
+		audio::AudioCodec(&hfmpi2c1, &hi2s2, 0x34, &resetFMPI2C),
+		wifi::Wifi(wifi_settings)
 	};
 
 	pack.lcd_display.init();
