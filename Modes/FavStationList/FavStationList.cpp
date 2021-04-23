@@ -64,7 +64,7 @@ static void draw_background(LCDDisplay& display) {
 static void draw_scroll_buttons(LCDDisplay& display) {
 	display.fillRect(229, 0, 11, 7, button_color_grey);
 	display.setBackgroundColor(button_color_grey);
-	for(int i = 0; i < 5; ++i) {
+	for(int i = 0; i <= 4; ++i) {
 		display.drawHLine(235 - i, 1 + i, i*2 + 1, text_color_white);
 	}
 
