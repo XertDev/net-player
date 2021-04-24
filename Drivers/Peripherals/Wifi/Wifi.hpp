@@ -22,6 +22,8 @@ namespace wifi
 
 		bool open(size_t id, SOCKET_TYPE type, const char* address, uint32_t port);
 		bool close(size_t id);
+
+		size_t ping(const char* address, size_t count);
 	private:
 
 		bool check_response_ok();

@@ -142,68 +142,68 @@ bool wifi::Wifi::open(size_t id, SOCKET_TYPE type, const char *address, uint32_t
 	static uint32_t random_local_port = 49512;
 	char buffer[128] = {0};
 	// set socket id
-	sprintf(buffer, "P0=%d", id);
+	sprintf(buffer, "P0=%d\r", id);
 	spi_.send(buffer, 0xFFFF);
 	if(!check_response_ok()) {
 		return false;
 	}
 
 	//set protocol
-	sprintf(buffer, "P1=%u", type);
+	sprintf(buffer, "P1=%u\r", type);
 	spi_.send(buffer, 0xFFFF);
 	if(!check_response_ok()) {
 		return false;
 	}
 
 	if(type == SOCKET_TYPE::TCP) {
-		sprintf(buffer, "P2=%u", random_local_port);
+		sprintf(buffer, "P2=%u\r", random_local_port);
 		spi_.send(buffer, 0xFFFF);
 		if(!check_response_ok()) {
 			return false;
 		}
 	}
 
-	sprintf(buffer, "P3=%s", address);
+	sprintf(buffer, "P3=%s\r", address);
 	spi_.send(buffer, 0xFFFF);
 	if(!check_response_ok()) {
 		return false;
 	}
 
 	if(type == SOCKET_TYPE::UDP) {
-		sprintf(buffer, "P4=%u", random_local_port);
+		sprintf(buffer, "P4=%u\r", random_local_port);
 		spi_.send(buffer, 0xFFFF);
 		if(!check_response_ok()) {
 			return false;
 		}
 	} else {
-		sprintf(buffer, "P4=%u", port);
+		sprintf(buffer, "P4=%u\r", port);
 		spi_.send(buffer, 0xFFFF);
 		if(!check_response_ok()) {
 			return false;
 		}
 	}
 
-	sprintf(buffer, "P5=0");
+	sprintf(buffer, "P5=0\r");
 	spi_.send(buffer, 0xFFFF);
 	if(!check_response_ok()) {
 		return false;
 	}
 
 	// start connection
-	sprintf(buffer, "P6=1");
+	sprintf(buffer, "P6=1\r");
 	spi_.send(buffer, 0xFFFF);
 	if(!check_response_ok()) {
 		return false;
 	}
 
 	if(type == SOCKET_TYPE::UDP) {
-		sprintf(buffer, "P0=%u", id);
+		sprintf(buffer, "P0=%u\r", id);
 		spi_.send(buffer, 0xFFFF);
 		if(!check_response_ok()) {
 			return false;
 		}
 
-		sprintf(buffer, "P4=%u", port);
+		sprintf(buffer, "P4=%u\r", port);
 		spi_.send(buffer, 0xFFFF);
 		if(!check_response_ok()) {
 			return false;
@@ -215,20 +215,83 @@ bool wifi::Wifi::open(size_t id, SOCKET_TYPE type, const char *address, uint32_t
 bool wifi::Wifi::close(size_t id) {
 	char buffer[8] = {0};
 
-	sprintf(buffer, "P0=%u", id);
+	sprintf(buffer, "P0=%u\r", id);
 	spi_.send(buffer, 0xFFFF);
 	if(!check_response_ok()) {
 		return false;
 	}
 
 	// start connection
-	sprintf(buffer, "P6=0");
+	sprintf(buffer, "P6=0\r");
 	spi_.send(buffer, 0xFFFF);
 	if(!check_response_ok()) {
 		return false;
 	}
 
 	return true;
+}
+
+size_t wifi::Wifi::ping(const char *address, size_t count) {
+	char buffer[128] = {0};
+	sprintf(buffer, "T1=%s\r", address);
+	spi_.send(buffer, 0xFFFF);
+	if(!check_response_ok()) {
+		return false;
+	}
+	sprintf(buffer, "T2=%u\r", count-1);
+	spi_.send(buffer, 0xFFFF);
+	if(!check_response_ok()) {
+		return false;
+	}
+	sprintf(buffer, "T0\r");
+	spi_.send(buffer, 0xFFFF);
+	spi_.receive(buffer, 2, 0xFFFF);
+
+	int received = 0;
+	bool completed = false;
+	uint8_t succesfull = 0;
+
+	do
+	{
+		received += spi_.receive(buffer+received, 128-received, 0xFFFF);
+
+		char* end = strstr(buffer, "\r\n");
+
+		while(end)
+		{
+			uint8_t length = end-buffer;
+
+			char* entry = new char[length+1];
+			memcpy(entry, buffer, length);
+			entry[length] = 0;
+			if(strcmp(entry, "OK")==0)
+			{
+				delete[] entry;
+				completed = true;
+				break;
+			}
+
+			strtok(entry, ",");
+			char* time = strtok(nullptr, ",");
+			if(!strstr(time, "Timeout"))
+			{
+				++succesfull;
+			}
+
+			received -= length+2;
+
+			memmove(buffer, end+2, received);
+			memset(buffer+received, 0, 128-received);
+
+
+			delete[] entry;
+			end = strstr(buffer, "\r\n");
+
+		}
+	}
+	while(received > 0 && !completed);
+
+	return succesfull;
 }
 
 bool wifi::Wifi::check_response_ok() {
