@@ -80,6 +80,7 @@ void main_cpp() {
 	pack.lcd_display.init();
 	pack.lcd_display.setOrientation(ST7789H2::ORIENTATION::LANDSCAPE_ROT180);
 
+	//bool success = pack.touch_panel.calibrate(); //not working
 	pack.touch_panel.setPollingMode();
 	pack.touch_panel.id();
 	pack.touch_panel.setThreshhold(20);

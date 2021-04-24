@@ -5,7 +5,16 @@
 
 namespace wifi
 {
-	enum class SECURITY: uint8_t
+	enum class SOCKET_TYPE: uint8_t
+	{
+		TCP,
+		UDP,
+		UDP_LITE,
+		TCP_SSL,
+		MQTT
+	};
+
+	enum class SECURITY: uint8_t // TODO: fix order
 	{
 		NONE,
 		WEP,

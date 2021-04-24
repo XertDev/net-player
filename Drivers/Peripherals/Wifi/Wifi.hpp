@@ -15,7 +15,16 @@ namespace wifi
 		~Wifi();
 
 		std::vector<AP> scan();
+
+		bool set_dhcp_client(bool state);
+		bool connect(const char* ssid, const char* password, SECURITY security);
+		bool disconnect();
+
+		bool open(size_t id, SOCKET_TYPE type, const char* address, uint32_t port);
+		bool close(size_t id);
 	private:
+
+		bool check_response_ok();
 		detail::WifiSPI spi_;
 	};
 }

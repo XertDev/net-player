@@ -1,5 +1,6 @@
 #include <Wifi/Wifi.hpp>
 #include <cstdlib>
+#include <cstdio>
 #include <cctype>
 #include <cstring>
 
@@ -88,4 +89,160 @@ std::vector<wifi::AP> wifi::Wifi::scan()
 	while(received > 0 && !completed);
 
 	return res;
+}
+
+bool wifi::Wifi::connect(const char *ssid, const char *password, SECURITY security) {
+	char buffer[256] = {0};
+
+	//set ssid
+	sprintf(buffer,"C1=%s\r", ssid);
+	spi_.send(buffer, 0xFFFF);
+	if(!check_response_ok()) {
+		return false;
+	}
+
+	//set password
+	sprintf(buffer, "C2=%s\r", password);
+	spi_.send(buffer, 0xFFFF);
+	if(!check_response_ok()) {
+		return false;
+	}
+
+	//set security level
+	sprintf(buffer, "C3=%u\r", (uint32_t)security);
+	spi_.send(buffer, 0xFFFF);
+	if(!check_response_ok()) {
+		return false;
+	}
+
+	sprintf(buffer, "C0\r");
+	spi_.send(buffer, 0xFFFF);
+
+	uint8_t received = spi_.receive(buffer, 256, 0xFFFF);
+	buffer[received] = 0;
+
+	return strstr(buffer, "OK\r\n> ") != nullptr;
+}
+
+bool wifi::Wifi::set_dhcp_client(bool state) {
+	char buffer[8];
+	sprintf(buffer, "C4=%d\r", state ? 1 : 0);
+	spi_.send(buffer, 0xFFFF);
+	return check_response_ok();
+}
+
+bool wifi::Wifi::disconnect() {
+	char* buffer = "CD\r";
+	spi_.send(buffer, 0xFFFF);
+	return check_response_ok();
+}
+
+bool wifi::Wifi::open(size_t id, SOCKET_TYPE type, const char *address, uint32_t port) {
+#pragma warning "only tcp and udp support"
+	static uint32_t random_local_port = 49512;
+	char buffer[128] = {0};
+	// set socket id
+	sprintf(buffer, "P0=%d", id);
+	spi_.send(buffer, 0xFFFF);
+	if(!check_response_ok()) {
+		return false;
+	}
+
+	//set protocol
+	sprintf(buffer, "P1=%u", type);
+	spi_.send(buffer, 0xFFFF);
+	if(!check_response_ok()) {
+		return false;
+	}
+
+	if(type == SOCKET_TYPE::TCP) {
+		sprintf(buffer, "P2=%u", random_local_port);
+		spi_.send(buffer, 0xFFFF);
+		if(!check_response_ok()) {
+			return false;
+		}
+	}
+
+	sprintf(buffer, "P3=%s", address);
+	spi_.send(buffer, 0xFFFF);
+	if(!check_response_ok()) {
+		return false;
+	}
+
+	if(type == SOCKET_TYPE::UDP) {
+		sprintf(buffer, "P4=%u", random_local_port);
+		spi_.send(buffer, 0xFFFF);
+		if(!check_response_ok()) {
+			return false;
+		}
+	} else {
+		sprintf(buffer, "P4=%u", port);
+		spi_.send(buffer, 0xFFFF);
+		if(!check_response_ok()) {
+			return false;
+		}
+	}
+
+	sprintf(buffer, "P5=0");
+	spi_.send(buffer, 0xFFFF);
+	if(!check_response_ok()) {
+		return false;
+	}
+
+	// start connection
+	sprintf(buffer, "P6=1");
+	spi_.send(buffer, 0xFFFF);
+	if(!check_response_ok()) {
+		return false;
+	}
+
+	if(type == SOCKET_TYPE::UDP) {
+		sprintf(buffer, "P0=%u", id);
+		spi_.send(buffer, 0xFFFF);
+		if(!check_response_ok()) {
+			return false;
+		}
+
+		sprintf(buffer, "P4=%u", port);
+		spi_.send(buffer, 0xFFFF);
+		if(!check_response_ok()) {
+			return false;
+		}
+	}
+	return true;
+}
+
+bool wifi::Wifi::close(size_t id) {
+	char buffer[8] = {0};
+
+	sprintf(buffer, "P0=%u", id);
+	spi_.send(buffer, 0xFFFF);
+	if(!check_response_ok()) {
+		return false;
+	}
+
+	// start connection
+	sprintf(buffer, "P6=0");
+	spi_.send(buffer, 0xFFFF);
+	if(!check_response_ok()) {
+		return false;
+	}
+
+	return true;
+}
+
+bool wifi::Wifi::check_response_ok() {
+	char buffer[128] = {0};
+	uint8_t received = spi_.receive(buffer, 128, 0xFFFF);
+	buffer[received] = 0;
+	char* ok_response = strstr(buffer, "OK\r\n");
+	if(ok_response == nullptr) {
+		return false;
+	}
+	char *prompt = strstr(ok_response+4, "> ");
+	if(prompt == nullptr) {
+		return false;
+	}
+
+	return true;
 }

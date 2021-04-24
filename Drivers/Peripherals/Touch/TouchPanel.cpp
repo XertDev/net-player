@@ -31,7 +31,7 @@ bool touch::TouchPanel::calibrate() {
 
 	uint8_t value[1] = {0};
 
-	value[0] = (MODE_FACTORY & MODE_MASK) << MODE_SHIFT;
+	value[0] = MODE_FACTORY << MODE_SHIFT;
 	writeReg(detail::REG::MODE, value, 1);
 
 	uint8_t state = readReg(detail::REG::MODE);
@@ -45,18 +45,40 @@ bool touch::TouchPanel::calibrate() {
 
 	HAL_Delay(300);
 
+	bool ended = false;
+
 	for(uint8_t attempts = 0; attempts < 100; ++attempts) {
 		state = readReg(detail::REG::MODE);
 		state = (state & (MODE_MASK << MODE_SHIFT)) >> MODE_SHIFT;
 
 		if(state == MODE_WORKING) {
-			return true;
+			ended = true;
+			break;
 		}
 
 		HAL_Delay(200);
 	}
 
-	return false;
+	if(!ended) {
+		return false;
+	}
+
+	//go to factory mode
+	value[0] = (MODE_FACTORY & MODE_MASK) << MODE_SHIFT;
+	writeReg(detail::REG::MODE, value, 1);
+	HAL_Delay(200);
+
+	//store calibration result
+	value[0] = 0x05;
+	writeReg(detail::REG::TD_STAT_REG, value, 1);
+	HAL_Delay(300);
+
+	//go to work mode
+	value[0] = (MODE_WORKING & MODE_MASK) << MODE_SHIFT;
+	writeReg(detail::REG::MODE, value, 1);
+	HAL_Delay(300);
+
+	return true;
 }
 
 uint8_t touch::TouchPanel::readReg(detail::REG reg) {
