@@ -35,6 +35,10 @@ namespace touch {
 		};
 
 		namespace FLAG {
+			constexpr uint8_t MODE_WORKING			   = 0x00;
+			constexpr uint8_t MODE_FACTORY			   = 0x04;
+			constexpr uint8_t MODE_MASK				   = 0x07;
+			constexpr uint8_t MODE_SHIFT			   = 0x04;
 			constexpr uint8_t G_MODE_INTERRUPT_TRIGGER = 0x01;
 			constexpr uint8_t G_MODE_INTERRUPT_POLLING = 0x00;
 			constexpr uint8_t G_MODE_INTERRUPT_MASK    = 0x03;

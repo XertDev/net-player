@@ -33,6 +33,8 @@ namespace touch {
 
 		uint16_t id();
 
+		bool calibrate();
+
 		void setTriggerMode();
 		void setPollingMode();
 

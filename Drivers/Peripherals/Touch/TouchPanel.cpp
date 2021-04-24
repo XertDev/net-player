@@ -26,6 +26,39 @@ uint16_t touch::TouchPanel::id() {
 	return readReg(detail::REG::ID);
 }
 
+bool touch::TouchPanel::calibrate() {
+	using namespace detail::FLAG;
+
+	uint8_t value[1] = {0};
+
+	value[0] = (MODE_FACTORY & MODE_MASK) << MODE_SHIFT;
+	writeReg(detail::REG::MODE, value, 1);
+
+	uint8_t state = readReg(detail::REG::MODE);
+	state = (state & (MODE_MASK << MODE_SHIFT)) >> MODE_SHIFT;
+	if(state != MODE_FACTORY) {
+		return false;
+	}
+
+	value[0] = 0x04;
+	writeReg(detail::REG::TD_STAT_REG, value, 1);
+
+	HAL_Delay(300);
+
+	for(uint8_t attempts = 0; attempts < 100; ++attempts) {
+		state = readReg(detail::REG::MODE);
+		state = (state & (MODE_MASK << MODE_SHIFT)) >> MODE_SHIFT;
+
+		if(state == MODE_WORKING) {
+			return true;
+		}
+
+		HAL_Delay(200);
+	}
+
+	return false;
+}
+
 uint8_t touch::TouchPanel::readReg(detail::REG reg) {
 	uint8_t value[1] = {0};
 
