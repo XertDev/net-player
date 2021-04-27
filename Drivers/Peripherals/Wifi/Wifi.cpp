@@ -3,6 +3,7 @@
 #include <cstdio>
 #include <cctype>
 #include <cstring>
+#include <algorithm>
 
 wifi::Wifi::Wifi(WifiIOSettings io_settings)
 :	spi_(io_settings)
@@ -87,6 +88,10 @@ std::vector<wifi::AP> wifi::Wifi::scan()
 		}
 	}
 	while(received > 0 && !completed);
+
+	std::sort(res.begin(), res.end(), [](const auto& wifi1, const auto& wifi2) {
+		return wifi1.rssi > wifi2.rssi;
+	});
 
 	return res;
 }

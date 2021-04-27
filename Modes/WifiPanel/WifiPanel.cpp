@@ -52,20 +52,23 @@ void wifiPanel(uint8_t* modes_stack, PeripheralsPack& pack) {
 						}
 						*last = 1;
 						should_change_view = true;
-					} else if (inRange(touch_info.x, 100, 240) && inRange(touch_info.y, 40, 100)) {
+					} else if (inRange(touch_info.x, 100, 240) && inRange(touch_info.y, 0, 32)) {
 						// Refresh wifis
 						wifis = pack.wifi.scan();
 						current_scroll_index = 0;
 						areas_count = std::max((size_t) 1, (wifis.size() - 1) / wifis_per_screen + 1);
 						draw_scroll(pack.lcd_display, current_scroll_index, areas_count);
 						draw_wifi_block_info(pack.lcd_display, current_scroll_index, wifis);
-					} else if (inRange(touch_info.x, 219, 240) && inRange(touch_info.y, 32, 53)) {
-						if(--current_scroll_index < 0) {
+					} // I add 10 y hitbox (53 -> 63 and 219 -> 219) due to lack of precision of the touch screen
+					else if (inRange(touch_info.x, 219, 240) && inRange(touch_info.y, 32, 63)) {
+						if(current_scroll_index == 0) {
 							current_scroll_index = areas_count - 1;
+						} else {
+							--current_scroll_index;
 						}
 						draw_scroll(pack.lcd_display, current_scroll_index, areas_count);
 						draw_wifi_block_info(pack.lcd_display, current_scroll_index, wifis);
-					} else if (inRange(touch_info.x, 219, 240) && inRange(touch_info.y, 180, 240)) {
+					} else if (inRange(touch_info.x, 219, 240) && inRange(touch_info.y, 209, 240)) {
 						current_scroll_index = (current_scroll_index + 1) % areas_count;
 						draw_scroll(pack.lcd_display, current_scroll_index, areas_count);
 						draw_wifi_block_info(pack.lcd_display, current_scroll_index, wifis);
@@ -114,7 +117,11 @@ static void draw_wifi_info(LCDDisplay& display, uint8_t index, wifi::AP ap_info)
 	strncpy(substr, ap_info.ssid, chars_to_display);
 	substr[chars_to_display] = '\0';
 	display.drawString(1, 32 + 52 * relative_index + 1, substr);
-	display.drawString(1, 32 + 52 * relative_index + 27, wifi::securityToString(ap_info.security));
+
+	char rssi_str[5];
+	sprintf(rssi_str, "%d", ap_info.rssi);
+	display.drawString(1, 32 + 52 * relative_index + 27, rssi_str);
+	display.drawString(100, 32 + 52 * relative_index + 27, wifi::securityToString(ap_info.security));
 }
 static void draw_empty_wifi_info(LCDDisplay& display, uint8_t index) {
 	uint8_t relative_index = index % 4;

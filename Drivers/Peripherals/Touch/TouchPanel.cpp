@@ -1,6 +1,8 @@
 #include "TouchPanel.hpp"
 #include "stm32f4xx_hal_fmpi2c.h"
 
+#include <algorithm>
+
 constexpr auto I2C_MEMADD_SIZE_8BIT = 0x00000001U;
 
 touch::TouchPanel::TouchPanel(FMPI2C_HandleTypeDef *fmpi2c_handler, uint8_t address, uint8_t h, uint8_t w, void(*reset_func)())
@@ -149,7 +151,8 @@ touch::TouchPoint touch::TouchPanel::getPoint(uint8_t index) {
 	}
 
 	TouchPoint point;
-	point.y = (((raw_position[0] & MSB_MASK) << 8) | (raw_position[1] & LSB_MASK));
+	// point.y = (((raw_position[0] & MSB_MASK) << 8) | (raw_position[1] & LSB_MASK));
+	point.y = std::max(0, (13 * ((5 * (((raw_position[0] & MSB_MASK) << 8) | (raw_position[1] & LSB_MASK)) - 120)/4 - 10) - 120)/12);
 	point.x = 240 - (((raw_position[2] & MSB_MASK) << 8) | (raw_position[3] & LSB_MASK));
 
 	return point;

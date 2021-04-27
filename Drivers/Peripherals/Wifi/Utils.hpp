@@ -35,7 +35,6 @@ namespace wifi
 		SECURITY security;
 		int8_t rssi;
 		uint8_t channel;
-
 	};
 }
 

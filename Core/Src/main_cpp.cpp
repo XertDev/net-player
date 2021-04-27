@@ -10,6 +10,7 @@
 #include "FavStationList/FavStationList.hpp"
 #include "StationSelectChoiceView/StationSelectChoiceView.hpp"
 #include "WifiPanel/WifiPanel.hpp"
+#include "TouchDebugView/TouchDebugView.hpp"
 
 
 extern TIM_HandleTypeDef htim9;
@@ -96,6 +97,7 @@ void main_cpp() {
 		stationInput,
 		wifiPanel,
 		radioView,
+		touchDebugView
 	};
 
 	while(true) {
