@@ -137,7 +137,7 @@ bool wifi::Wifi::disconnect() {
 	return check_response_ok();
 }
 
-bool wifi::Wifi::open(size_t id, SOCKET_TYPE type, const char *address, uint32_t port) {
+wifi::Socket* wifi::Wifi::open(size_t id, SOCKET_TYPE type, const char *address, uint32_t port) {
 #pragma warning "only tcp and udp support"
 	static uint32_t random_local_port = 49512;
 	char buffer[128] = {0};
@@ -145,91 +145,73 @@ bool wifi::Wifi::open(size_t id, SOCKET_TYPE type, const char *address, uint32_t
 	sprintf(buffer, "P0=%d\r", id);
 	spi_.send(buffer, 0xFFFF);
 	if(!check_response_ok()) {
-		return false;
+		return nullptr;
 	}
 
 	//set protocol
 	sprintf(buffer, "P1=%u\r", type);
 	spi_.send(buffer, 0xFFFF);
 	if(!check_response_ok()) {
-		return false;
+		return nullptr;
 	}
 
 	if(type == SOCKET_TYPE::TCP) {
 		sprintf(buffer, "P2=%u\r", random_local_port);
 		spi_.send(buffer, 0xFFFF);
 		if(!check_response_ok()) {
-			return false;
+			return nullptr;
 		}
 	}
 
 	sprintf(buffer, "P3=%s\r", address);
 	spi_.send(buffer, 0xFFFF);
 	if(!check_response_ok()) {
-		return false;
+		return nullptr;
 	}
 
 	if(type == SOCKET_TYPE::UDP) {
 		sprintf(buffer, "P4=%u\r", random_local_port);
 		spi_.send(buffer, 0xFFFF);
 		if(!check_response_ok()) {
-			return false;
+			return nullptr;
 		}
 	} else {
 		sprintf(buffer, "P4=%u\r", port);
 		spi_.send(buffer, 0xFFFF);
 		if(!check_response_ok()) {
-			return false;
+			return nullptr;
 		}
 	}
 
 	sprintf(buffer, "P5=0\r");
 	spi_.send(buffer, 0xFFFF);
 	if(!check_response_ok()) {
-		return false;
+		return nullptr;
 	}
 
 	// start connection
 	sprintf(buffer, "P6=1\r");
 	spi_.send(buffer, 0xFFFF);
 	if(!check_response_ok()) {
-		return false;
+		return nullptr;
 	}
 
 	if(type == SOCKET_TYPE::UDP) {
 		sprintf(buffer, "P0=%u\r", id);
 		spi_.send(buffer, 0xFFFF);
 		if(!check_response_ok()) {
-			return false;
+			return nullptr;
 		}
 
 		sprintf(buffer, "P4=%u\r", port);
 		spi_.send(buffer, 0xFFFF);
 		if(!check_response_ok()) {
-			return false;
+			return nullptr;
 		}
 	}
-	return true;
+	return new Socket(this, id);
 }
 
-bool wifi::Wifi::close(size_t id) {
-	char buffer[8] = {0};
-
-	sprintf(buffer, "P0=%u\r", id);
-	spi_.send(buffer, 0xFFFF);
-	if(!check_response_ok()) {
-		return false;
-	}
-
-	// start connection
-	sprintf(buffer, "P6=0\r");
-	spi_.send(buffer, 0xFFFF);
-	if(!check_response_ok()) {
-		return false;
-	}
-
-	return true;
-}
 
 size_t wifi::Wifi::ping(const char *address, size_t count) {
 	char buffer[128] = {0};
@@ -292,6 +274,20 @@ size_t wifi::Wifi::ping(const char *address, size_t count) {
 	while(received > 0 && !completed);
 
 	return succesfull;
+}
+
+uint32_t wifi::Wifi::getUTCTime() {
+	char buffer[32] = {0};
+	sprintf(buffer, "GT\r");
+	spi_.send(buffer, 0xFFFF);
+	spi_.receive(buffer, 2, 0xFFFF);
+
+	size_t received = spi_.receive(buffer, 0, 0xFFFF);
+	buffer[received] = 0;
+	char* end = strstr(buffer, "\r\n");
+	*end = 0;
+
+	return atol(buffer);
 }
 
 bool wifi::Wifi::check_response_ok() {

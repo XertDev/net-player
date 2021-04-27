@@ -4,6 +4,7 @@
 #include "WifiSPI.h"
 #include "WifiIOSettings.hpp"
 #include "Utils.hpp"
+#include "Socket.hpp"
 
 #include <vector>
 
@@ -20,12 +21,12 @@ namespace wifi
 		bool connect(const char* ssid, const char* password, SECURITY security);
 		bool disconnect();
 
-		bool open(size_t id, SOCKET_TYPE type, const char* address, uint32_t port);
-		bool close(size_t id);
+		Socket* open(size_t id, SOCKET_TYPE type, const char* address, uint32_t port);
 
 		size_t ping(const char* address, size_t count);
+		uint32_t getUTCTime();
 	private:
-
+		friend class Socket;
 		bool check_response_ok();
 		detail::WifiSPI spi_;
 	};
