@@ -11,7 +11,7 @@
 #include "StationSelectChoiceView/StationSelectChoiceView.hpp"
 #include "WifiPanel/WifiPanel.hpp"
 #include "TouchDebugView/TouchDebugView.hpp"
-
+#include "Config/WifiFileConfig.hpp"
 
 extern TIM_HandleTypeDef htim9;
 extern SD_HandleTypeDef hsd;
@@ -61,10 +61,12 @@ wifi::WifiIOSettings wifi_settings {
 	hspi3
 };
 
+
 uint8_t touches = 0;
 uint8_t gesture = 0;
 touch::TouchPoint point;
 touch::TouchDetails details;
+
 
 extern "C" void main_cpp();
 void main_cpp() {
@@ -77,6 +79,13 @@ void main_cpp() {
 		audio::AudioCodec(&hfmpi2c1, &hi2s2, 0x34, &resetFMPI2C),
 		wifi::Wifi(wifi_settings)
 	};
+	pack.storage.init(hsd);
+
+	FIL file;
+	pack.storage.openFile("wifi.conf", file);
+
+	config::WifiFileConfig wifi_config(file);
+
 
 	pack.lcd_display.init();
 	pack.lcd_display.setOrientation(ST7789H2::ORIENTATION::LANDSCAPE_ROT180);
