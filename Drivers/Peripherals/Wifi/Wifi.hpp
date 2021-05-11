@@ -26,10 +26,14 @@ namespace wifi
 		size_t ping(const char* address, size_t count);
 		const char* get_ip(const char* domain_name);
 		uint32_t getUTCTime();
+		bool is_connected();
+		const char* get_connected_name();
 	private:
 		friend class Socket;
 		bool check_response_ok();
 		detail::WifiSPI spi_;
+		bool connected_state_ = false;
+		char* connected_name_ = "";
 	};
 }
 #endif /* PERIPHERALS_WIFI_WIFI_HPP_ */

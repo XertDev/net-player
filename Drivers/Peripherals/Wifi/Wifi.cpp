@@ -126,7 +126,14 @@ bool wifi::Wifi::connect(const char *ssid, const char *password, SECURITY securi
 	uint8_t received = spi_.receive(buffer, 256, 0xFFFF);
 	buffer[received] = 0;
 
-	return strstr(buffer, "OK\r\n> ") != nullptr;
+	if(strstr(buffer, "OK\r\n> ") != nullptr) {
+		this->connected_state_ = true;
+		this->connected_name_ = (char*) malloc(strlen(ssid));
+		strcpy(this->connected_name_, ssid);
+		return true;
+	} else {
+		return false;
+	}
 }
 
 bool wifi::Wifi::set_dhcp_client(bool state) {
@@ -139,7 +146,13 @@ bool wifi::Wifi::set_dhcp_client(bool state) {
 bool wifi::Wifi::disconnect() {
 	char* buffer = "CD\r";
 	spi_.send(buffer, 0xFFFF);
-	return check_response_ok();
+	if(check_response_ok()) {
+		this->connected_state_ = false;
+		delete(this->connected_name_);
+		return true;
+	} else {
+		return false;
+	}
 }
 
 wifi::Socket* wifi::Wifi::open(size_t id, SOCKET_TYPE type, const char *address, uint32_t port) {
@@ -159,14 +172,14 @@ wifi::Socket* wifi::Wifi::open(size_t id, SOCKET_TYPE type, const char *address,
 	if(!check_response_ok()) {
 		return nullptr;
 	}
-
-	if(type == SOCKET_TYPE::TCP) {
-		sprintf(buffer, "P2=%u\r", random_local_port);
-		spi_.send(buffer, 0xFFFF);
-		if(!check_response_ok()) {
-			return nullptr;
-		}
-	}
+//
+//	if(type == SOCKET_TYPE::TCP) {
+//		sprintf(buffer, "P2=%u\r", random_local_port);
+//		spi_.send(buffer, 0xFFFF);
+//		if(!check_response_ok()) {
+//			return nullptr;
+//		}
+//	}
 
 	sprintf(buffer, "P3=%s\r", address);
 	spi_.send(buffer, 0xFFFF);
@@ -188,11 +201,16 @@ wifi::Socket* wifi::Wifi::open(size_t id, SOCKET_TYPE type, const char *address,
 		}
 	}
 
-	sprintf(buffer, "P5=0\r");
+//	sprintf(buffer, "P5=0\r");
+//	spi_.send(buffer, 0xFFFF);
+//	if(!check_response_ok()) {
+//		return nullptr;
+//	}
+
+	sprintf(buffer, "P?\r");
 	spi_.send(buffer, 0xFFFF);
-	if(!check_response_ok()) {
-		return nullptr;
-	}
+	spi_.receive(buffer, 0, 0xFFFF);
+
 
 	// start connection
 	sprintf(buffer, "P6=1\r");
@@ -324,4 +342,10 @@ bool wifi::Wifi::check_response_ok() {
 	}
 
 	return true;
+}
+bool wifi::Wifi::is_connected() {
+	return this->connected_state_;
+}
+const char* wifi::Wifi::get_connected_name() {
+	return this->connected_name_;
 }

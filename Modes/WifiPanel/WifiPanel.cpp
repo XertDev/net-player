@@ -73,10 +73,15 @@ void wifiPanel(uint8_t* modes_stack, PeripheralsPack& pack) {
 						draw_scroll(pack.lcd_display, current_scroll_index, areas_count);
 						draw_wifi_block_info(pack.lcd_display, current_scroll_index, wifis);
 					} else {
-						uint32_t selected_index = (touch_info.y - 32) / 52;
+						uint32_t selected_index = 4 * current_scroll_index + (touch_info.y - 32) / 52;
 						if(selected_index < wifis.size()) {
+							// Disconnect if already connected
+							if(pack.wifi.is_connected()) {
+								pack.wifi.disconnect();
+							}
+
 							auto wifi = wifis[selected_index];
-							// TODO: For now it is hardcoded with one password
+							// TODO: For now it is hardcoded with one password for known networks
 							bool connected = false;
 							if(strcmp(wifi.ssid, "Majkel") == 0) {
 								connected = pack.wifi.connect("Majkel", "Chyba ty", wifi.security);
@@ -84,19 +89,11 @@ void wifiPanel(uint8_t* modes_stack, PeripheralsPack& pack) {
 								connected = pack.wifi.connect(wifi.ssid, "NieZgadniesz", wifi.security);
 							} else if(strcmp(wifi.ssid, "Poco Michal") == 0) {
 								connected = pack.wifi.connect(wifi.ssid, "", wifi.security);
+							} else if(strcmp(wifi.ssid, "worldcreator") == 0) {
+								connected = pack.wifi.connect(wifi.ssid, "12345678", wifi.security);
 							}
 							// If connected successfully, go back to the main screen
-							//
 							if (connected) {
-								const char* ip = pack.wifi.get_ip("stream.rcs.revma.com");
-								wifi::Socket* xd = pack.wifi.open(0, wifi::SOCKET_TYPE::TCP, ip, 80);
-
-								char* res;
-								char* request = "GET /an1ugyygzk8uv HTTP/1.0\r\nHost: stream.rcs.revma.com\r\n\r\n";
-								if(xd->send(request, strlen(request))) {
-									res = xd->read(1460);
-								}
-
 								uint8_t *last = modes_stack;
 								while (*last != 0) {
 									++last;

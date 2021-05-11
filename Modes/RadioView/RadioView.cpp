@@ -50,6 +50,16 @@ void radioView(uint8_t* modes_stack, PeripheralsPack& pack) {
 	uint8_t info_move_delay_ticks = 10;
 	size_t info_len = strlen(music_info);
 
+	const char* ip = pack.wifi.get_ip("stream.rcs.revma.com");
+	wifi::Socket* socket = pack.wifi.open(0, wifi::SOCKET_TYPE::TCP, ip, 80);
+
+	// stream.rcs.revma.com/an1ugyygzk8uv
+	char* res;
+	char* request = "GET /an1ugyygzk8uv HTTP/1.0\r\nHost: stream.rcs.revma.com\r\n\r\n";
+	if(socket->send(request, strlen(request))) {
+		res = socket->read(1460);
+	}
+
 	/* Main Loop */
 	bool should_change_view = false;
 	auto& touch_panel = pack.touch_panel;
@@ -96,6 +106,7 @@ void radioView(uint8_t* modes_stack, PeripheralsPack& pack) {
 		}
 
 		if(should_change_view) {
+			socket->close();
 			break;
 		}
 	}

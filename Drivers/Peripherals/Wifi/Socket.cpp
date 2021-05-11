@@ -32,11 +32,10 @@ char* wifi::Socket::read(size_t size) {
 	wifi_->spi_.send(buffer, 0xFFFF);
 
 	char* response = (char*) malloc(size + 10);
-	uint8_t received = wifi_->spi_.receive(response, size, 0xFFFF);
+	uint32_t received = wifi_->spi_.receive(response, size, 0xFFFF);
 	response[received] = 0;
 
-	if(strstr(buffer, "\r\n\r\nOK\r\n> ")) {
-		response[received-10] = 0;
+	if(strstr(response, "\r\n\r\nOK\r\n> ") != 0) {
 		return response;
 	} else {
 		return nullptr;
