@@ -17,7 +17,6 @@ static void draw_wifi_info(LCDDisplay& display, wifi::Wifi& wifi);
 void stationSelectChoiceView(uint8_t* modes_stack, PeripheralsPack& pack) {
 	draw_background(pack.lcd_display);
 	draw_fav_list_button(pack.lcd_display, pack.wifi);
-	draw_input_station_button(pack.lcd_display, pack.wifi);
 	draw_wifi_panel_button(pack.lcd_display);
 	draw_wifi_info(pack.lcd_display, pack.wifi);
 
@@ -43,14 +42,7 @@ void stationSelectChoiceView(uint8_t* modes_stack, PeripheralsPack& pack) {
 						}
 						*last = 2;
 						should_change_view = true;
-					} else if (pack.wifi.is_connected() && inRange(touch_info.x, 130, 220) && inRange(touch_info.y, 20, 110)) {
-						uint8_t *last = modes_stack;
-						while (*last != 0) {
-							++last;
-						}
-						*last = 3;
-						should_change_view = true;
-					} else if (inRange(touch_info.x, 20, 110) && inRange(touch_info.y, 130, 220)) {
+					} else if (inRange(touch_info.y, 20, 110)) {
 						uint8_t *last = modes_stack;
 						while (*last != 0) {
 							++last;
@@ -100,22 +92,21 @@ static void draw_input_station_button(LCDDisplay& display, wifi::Wifi& wifi) {
 }
 
 static void draw_wifi_panel_button(LCDDisplay& display) {
-	display.fillRect(20, 130, 90, 90, button_color_darkcyan);
+	display.fillRect(130, 20, 90, 90, button_color_darkcyan);
 	display.setBackgroundColor(button_color_darkcyan);
-	display.drawString(31, 144, "WiFi");
-	display.drawString(22, 182, "Panel");
+	display.drawString(141, 34, "WiFi");
+	display.drawString(132, 72, "Panel");
 }
 static void draw_wifi_info(LCDDisplay& display, wifi::Wifi& wifi) {
 	if(wifi.is_connected()){
-		display.fillRect(130, 130, 90, 90, button_color_green);
+		display.fillRect(15, 130, 210, 90, button_color_green);
 		display.setBackgroundColor(button_color_green);
-		display.drawString(132, 132, "Connected");
-		display.drawString(132, 150, wifi.get_connected_name());
+		display.drawString(43, 132, "Connected");
+		display.drawHLine(15, 160, 210, background_color_grey);
+		display.drawString(18, 163, wifi.get_connected_name());
 	} else {
-		display.fillRect(130, 130, 90, 90, button_color_red);
+		display.fillRect(15, 130, 210, 90, button_color_red);
 		display.setBackgroundColor(button_color_red);
-		display.drawString(149, 134, "Dis");
-		display.drawString(141, 163, "conn");
-		display.drawString(132, 192, "ected");
+		display.drawString(18, 161, "Disconnected");
 	}
 }
