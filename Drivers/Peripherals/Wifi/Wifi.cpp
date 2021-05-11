@@ -281,6 +281,21 @@ size_t wifi::Wifi::ping(const char *address, size_t count) {
 	return succesfull;
 }
 
+const char* wifi::Wifi::get_ip(const char* domain_name) {
+	char buffer[256]={};
+	sprintf(buffer, "D0=%s\r", domain_name);
+	spi_.send(buffer, 0xFFFF);
+	spi_.receive(buffer, 256, 0xFFFF);
+
+	char* start = strstr(buffer, "\r\n") + 2;
+	char* end = strstr(start, "\r\n");
+	char* res = (char*) malloc(end - start + 1);
+	*end = 0;
+	sprintf(res, "%s", start);
+
+	return res;
+}
+
 uint32_t wifi::Wifi::getUTCTime() {
 	char buffer[32] = {0};
 	sprintf(buffer, "GT\r");

@@ -24,6 +24,7 @@ namespace wifi
 		Socket* open(size_t id, SOCKET_TYPE type, const char* address, uint32_t port);
 
 		size_t ping(const char* address, size_t count);
+		const char* get_ip(const char* domain_name);
 		uint32_t getUTCTime();
 	private:
 		friend class Socket;

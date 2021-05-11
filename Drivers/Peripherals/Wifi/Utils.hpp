@@ -18,9 +18,9 @@ namespace wifi
 	{
 		NONE,
 		WEP,
+		WPA,
 		WPA2,
 		WPA_WPA2,
-		WPA,
 		UNKNOWN
 	};
 

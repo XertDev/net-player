@@ -1,7 +1,10 @@
 #include <Wifi/Socket.hpp>
 #include "Wifi.hpp"
 
+#include <cstring>
+#include <cstdlib>
 #include <cstdio>
+#include <cassert>
 
 
 wifi::Socket::Socket(wifi::Wifi *wifi, uint8_t socket_id)
@@ -9,6 +12,7 @@ wifi::Socket::Socket(wifi::Wifi *wifi, uint8_t socket_id)
 }
 
 char* wifi::Socket::read(size_t size) {
+	assert(size > 0 && size <= 1460);
 	char temp[128] = {0};
 	// set socket id
 	sprintf(temp, "P0=%d\r", socket_id_);
@@ -17,9 +21,26 @@ char* wifi::Socket::read(size_t size) {
 		return nullptr;
 	}
 
-	//todo: implement this
+	char buffer[256];
+	sprintf(buffer, "R1=%u\r", size);
+	wifi_->spi_.send(buffer, 0xFFFF);
+	if(!wifi_->check_response_ok()) {
+		return nullptr;
+	}
 
-	return nullptr;
+	sprintf(buffer, "R0\r");
+	wifi_->spi_.send(buffer, 0xFFFF);
+
+	char* response = (char*) malloc(size + 10);
+	uint8_t received = wifi_->spi_.receive(response, size, 0xFFFF);
+	response[received] = 0;
+
+	if(strstr(buffer, "\r\n\r\nOK\r\n> ")) {
+		response[received-10] = 0;
+		return response;
+	} else {
+		return nullptr;
+	}
 }
 
 bool wifi::Socket::send(char* buffer, size_t size) {

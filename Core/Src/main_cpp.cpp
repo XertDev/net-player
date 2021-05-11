@@ -85,7 +85,7 @@ void main_cpp() {
 	pack.storage.openFile("wifi.conf", file);
 
 	config::WifiFileConfig wifi_config(file);
-
+	pack.wifi.set_dhcp_client(true);
 
 	pack.lcd_display.init();
 	pack.lcd_display.setOrientation(ST7789H2::ORIENTATION::LANDSCAPE_ROT180);
