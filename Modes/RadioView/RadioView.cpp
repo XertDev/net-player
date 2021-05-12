@@ -26,10 +26,13 @@ constexpr uint16_t BUFFER_SIZE = 2048;
 static int16_t audio_data[2 * BUFFER_SIZE];
 static void play_tone(void);
 
+
+constexpr uint8_t text_delay = 5;
+
 void radioView(uint8_t* modes_stack, PeripheralsPack& pack) {
 	draw_background(pack.lcd_display);
 
-	draw_station_name(pack.lcd_display, "RMF");
+	draw_station_name(pack.lcd_display, current_station.label);
 	draw_music_info(pack.lcd_display, "", 0);
 	draw_volume_info(pack.lcd_display);
 	update_volume_info(pack.lcd_display, pack.codec);
@@ -46,34 +49,65 @@ void radioView(uint8_t* modes_stack, PeripheralsPack& pack) {
 
 	//play_tone();
 
-	char* music_info = "no info";
+	char* music_info = (char*) malloc(10);
 	uint8_t info_offset = 0;
-	uint8_t info_move_delay_ticks = 10;
+	uint8_t info_move_delay_ticks = text_delay;
 	size_t info_len = strlen(music_info);
 
 	const char* ip = pack.wifi.get_ip(current_station.domain);
-	wifi::Socket* socket = pack.wifi.open(0, wifi::SOCKET_TYPE::TCP, ip, 80);
+	wifi::Socket* mp3_socket = pack.wifi.open(0, wifi::SOCKET_TYPE::TCP, ip, current_station.port);
 
 	// stream.rcs.revma.com/an1ugyygzk8uv
 	char* res;
-	char request[256];
-	sprintf(request, "GET %s HTTP/1.0\r\nHost: %s\r\n\r\n", current_station.subdomain, current_station.domain);
-	if(socket->send(request, strlen(request))) {
-		res = socket->read(1460);
+	char* mp3_info;
+	size_t mp3_len;
+	char mp3_request[256];
+	sprintf(mp3_request, "GET %s HTTP/1.0\r\nHost: %s:%u\r\n\r\n", current_station.subdomain, current_station.domain, current_station.port);
+
+	char* new_music_info;
+	char music_info_request[256];
+	sprintf(music_info_request, "GET /currentsong HTTP/1.0\r\nHost: %s:%u\r\n\r\n", current_station.domain, current_station.port);
+	if(mp3_socket->send(mp3_request, strlen(mp3_request))) {
+		res = mp3_socket->read(1460, mp3_len);
 	}
 
 	/* Main Loop */
 	bool should_change_view = false;
 	auto& touch_panel = pack.touch_panel;
 	while(true) {
-		HAL_Delay(100);
+		mp3_info = mp3_socket->read(1460, mp3_len);
+
+		wifi::Socket* music_info_socket = pack.wifi.open(1, wifi::SOCKET_TYPE::TCP, ip, current_station.port);
+		if(music_info_socket->send(music_info_request, strlen(music_info_request))) {
+			size_t new_music_info_len = 0;
+			new_music_info = music_info_socket->read(400, new_music_info_len);
+			char* temp = strstr(new_music_info, "\r\n") +2;
+			while(strncmp(temp, "Content-Length:", 15) != 0) {
+				temp = strstr(temp, "\r\n") + 2;
+			}
+			temp += 15;
+			char* end = strstr(temp, "\r\n");
+			char* content_length = (char*) malloc(end-temp+1);
+			memcpy(content_length, temp, end-temp);
+			content_length[end-temp] = 0;
+			int length = atoi(content_length);
+			free(content_length);
+			temp = strstr(temp, "\r\n\r\n")+4;
+
+			memcpy(new_music_info, temp, length);
+			new_music_info[length] = 0;
+		}
+		music_info_socket->close();
+
 		// TODO: Get music info
-		char* new_music_info = "get info from station";
 		if(strcmp(music_info, new_music_info) != 0) {
 			// Reset offset so that
-			music_info = new_music_info;
+			if(strlen(music_info) < strlen(new_music_info)) {
+				music_info = (char*) realloc(music_info, strlen(new_music_info) + 1);
+			}
+			strcpy(music_info, new_music_info);
 			info_offset = 0;
-			info_move_delay_ticks = 10;
+			info_move_delay_ticks = text_delay;
 			info_len = strlen(music_info);
 		} else {
 			if(info_len <= 14) {
@@ -83,10 +117,11 @@ void radioView(uint8_t* modes_stack, PeripheralsPack& pack) {
 			} else {
 				info_offset = (info_offset + 1) % info_len;
 				if(info_offset == 0) {
-					info_move_delay_ticks = 10;
+					info_move_delay_ticks = text_delay;
 				}
 			}
 		}
+		free(new_music_info);
 		draw_music_info(pack.lcd_display, music_info, info_offset);
 
 		while(detected_touch) {
@@ -108,7 +143,8 @@ void radioView(uint8_t* modes_stack, PeripheralsPack& pack) {
 		}
 
 		if(should_change_view) {
-			socket->close();
+			mp3_socket->close();
+			free(music_info);
 			break;
 		}
 	}

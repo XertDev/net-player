@@ -18,7 +18,7 @@ namespace wifi {
 
 		uint8_t socket_id_;
 	public:
-		char* read(size_t size);
+		char* read(size_t size, size_t& length);
 		bool send(char* buffer, size_t size);
 		bool close();
 

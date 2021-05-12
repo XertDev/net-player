@@ -27,21 +27,33 @@ void favStationList(uint8_t* modes_stack, PeripheralsPack& pack) {
 
 	FIL file;
 	std::vector<StationInfo> stations;
-	/*pack.storage.openFile("0:/station_list.txt", file);
+	pack.storage.openFile("0:/station_list.txt", file);
 
 	char info_buffer[256];
 	do {
 		f_gets(info_buffer, sizeof(info_buffer), &file);
-		StationInfo station;
-		strcpy(station.label, strtok(info_buffer, ";"));
-		strcpy(station.domain, strtok(NULL, ";"));
-		strcpy(station.subdomain, strtok(NULL, "\0"));
+
+		StationInfo station{};
+
+		char* label = strtok(info_buffer, ";");
+		station.label = (char*) malloc(strlen(label) + 1);
+		strcpy(station.label, label);
+
+		char* domain =  strtok(NULL, ";");
+		station.domain = (char*) malloc(strlen(domain) + 1);
+		strcpy(station.domain, domain);
+
+		char* subdomain = strtok(NULL, ";");
+		station.subdomain = (char*) malloc(strlen(subdomain) + 1);
+		strcpy(station.subdomain, subdomain);
+
+		station.port = atoi(strtok(NULL, "\n"));
 		stations.push_back(station);
 	} while(!f_eof(&file));
 
-	pack.storage.closeFile(file);*/
-	stations.push_back(StationInfo{"Radio 357", "stream.rcs.revma.com", "/an1ugyygzk8uv"});
-	stations.push_back(StationInfo{"Smooth Jazz Florida", "http://us4.internet-radio.com:8266", "/"});
+	pack.storage.closeFile(file);
+	/*stations.push_back(StationInfo{"Radio 357", "stream.rcs.revma.com", "/an1ugyygzk8uv?rj-ttl=5&rj-tok=AAABeWC4tFcAhiTkk11B7NQz7w", 80});
+	stations.push_back(StationInfo{"Smooth Jazz Florida", "us4.internet-radio.com", "/", 8266});*/
 
 	uint8_t current_scroll_index = 0;
 	uint8_t areas_count = std::max((size_t) 1, (stations.size() - 1) / stations_per_screen + 1);

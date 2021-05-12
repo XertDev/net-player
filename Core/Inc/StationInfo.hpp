@@ -6,6 +6,7 @@ struct StationInfo {
 	char* label;
 	char* domain;
 	char* subdomain;
+	uint32_t port;
 };
 
 
