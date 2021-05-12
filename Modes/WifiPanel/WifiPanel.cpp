@@ -136,11 +136,11 @@ static void draw_refresh_button(LCDDisplay& display) {
 static void draw_wifi_info(LCDDisplay& display, uint8_t index, wifi::AP ap_info) {
 	uint8_t relative_index = index % wifis_per_screen;
 	if(relative_index % 2 == 0) {
-		display.fillRect(0, 32 + 52 * relative_index, 218, 52, button_color_green);
-		display.setBackgroundColor(button_color_green);
+		display.fillRect(0, 32 + 52 * relative_index, 218, 52, item_color_1_d);
+		display.setBackgroundColor(item_color_1_d);
 	} else {
-		display.fillRect(0, 32 + 52 * relative_index, 218, 52, button_color_lightgreen);
-		display.setBackgroundColor(button_color_lightgreen);
+		display.fillRect(0, 32 + 52 * relative_index, 218, 52, item_color_1_l);
+		display.setBackgroundColor(item_color_1_l);
 	}
 	char substr[13];
 	int chars_to_display = std::min(strlen(ap_info.ssid), (size_t) 12);
@@ -154,11 +154,11 @@ static void draw_wifi_info(LCDDisplay& display, uint8_t index, wifi::AP ap_info)
 	display.drawString(100, 32 + 52 * relative_index + 27, wifi::securityToString(ap_info.security));
 }
 static void draw_empty_wifi_info(LCDDisplay& display, uint8_t index) {
-	uint8_t relative_index = index % 4;
-	display.fillRect(32 + 52 * relative_index, 0, 219, 52, background_color_dark);
+	uint8_t relative_index = index % wifis_per_screen;
+	display.fillRect(0, 32 + 52 * relative_index, 219, 52, background_color_dark);
 }
 static void draw_wifi_block_info(LCDDisplay& display, uint8_t scroll_index, const std::vector<wifi::AP>& ap_info_vector) {
-	for(uint8_t i = 0; i < 4; ++i) {
+	for(uint8_t i = 0; i < wifis_per_screen; ++i) {
 		uint8_t vec_index = scroll_index * wifis_per_screen + i;
 		if(i < ap_info_vector.size()) {
 			draw_wifi_info(display, i, ap_info_vector[vec_index]);

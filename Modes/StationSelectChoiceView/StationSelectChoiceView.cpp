@@ -10,7 +10,6 @@ constexpr uint8_t target_backlight_level = 100;
 
 static void draw_background(LCDDisplay& display);
 static void draw_fav_list_button(LCDDisplay& lcd_display, wifi::Wifi& wifi);
-static void draw_input_station_button(LCDDisplay& lcd_display, wifi::Wifi& wifi);
 static void draw_wifi_panel_button(LCDDisplay& lcd_display);
 static void draw_wifi_info(LCDDisplay& display, wifi::Wifi& wifi);
 
@@ -42,7 +41,7 @@ void stationSelectChoiceView(uint8_t* modes_stack, PeripheralsPack& pack) {
 						}
 						*last = 2;
 						should_change_view = true;
-					} else if (inRange(touch_info.y, 20, 110)) {
+					} else if (inRange(touch_info.x, 130, 220) && inRange(touch_info.y, 20, 110)) {
 						uint8_t *last = modes_stack;
 						while (*last != 0) {
 							++last;
@@ -78,19 +77,6 @@ static void draw_fav_list_button(LCDDisplay& display, wifi::Wifi& wifi) {
 	display.drawString(31, 82, "List");
 }
 
-static void draw_input_station_button(LCDDisplay& display, wifi::Wifi& wifi) {
-	if(wifi.is_connected()) {
-		display.fillRect(130, 20, 90, 90, button_color_darkblue);
-		display.setBackgroundColor(button_color_darkblue);
-	} else {
-		display.fillRect(130, 20, 90, 90, background_color_grey);
-		display.setBackgroundColor(background_color_grey);
-	}
-	display.drawString(149, 24, "New");
-	display.drawString(141, 53, "From");
-	display.drawString(132, 82, "Input");
-}
-
 static void draw_wifi_panel_button(LCDDisplay& display) {
 	display.fillRect(130, 20, 90, 90, button_color_darkcyan);
 	display.setBackgroundColor(button_color_darkcyan);
@@ -102,8 +88,8 @@ static void draw_wifi_info(LCDDisplay& display, wifi::Wifi& wifi) {
 		display.fillRect(15, 130, 210, 90, button_color_green);
 		display.setBackgroundColor(button_color_green);
 		display.drawString(43, 132, "Connected");
-		display.drawHLine(15, 160, 210, background_color_grey);
-		display.drawString(18, 163, wifi.get_connected_name());
+		display.drawHLine(15, 157, 210, background_color_grey);
+		display.drawString(18, 160, wifi.get_connected_name());
 	} else {
 		display.fillRect(15, 130, 210, 90, button_color_red);
 		display.setBackgroundColor(button_color_red);

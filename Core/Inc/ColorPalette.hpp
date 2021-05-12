@@ -35,3 +35,10 @@ constexpr Color button_color_12 = from_r8g8b8(170, 170, 170);
 constexpr Color button_color_grey = button_color_12;
 constexpr Color button_color_13 = from_r8g8b8(252, 218, 0);
 constexpr Color button_color_yellow = button_color_13;
+
+//constexpr Color item_color_blue_grey_light = from_r8g8b8(181, 210, 227);
+constexpr Color item_color_blue_grey_light = from_r8g8b8(142, 211, 214);
+constexpr Color item_color_1_l = item_color_blue_grey_light;
+//constexpr Color item_color_blue_grey_dark = from_r8g8b8(140, 187, 216);
+constexpr Color item_color_blue_grey_dark = from_r8g8b8(71, 185, 191);
+constexpr Color item_color_1_d = item_color_blue_grey_dark;

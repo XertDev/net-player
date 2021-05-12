@@ -11,6 +11,7 @@
 extern I2S_HandleTypeDef hi2s2;
 
 extern bool detected_touch;
+extern StationInfo current_station;
 
 static void draw_background(LCDDisplay& display);
 static void draw_station_name(LCDDisplay& display, const char* station_name);
@@ -50,12 +51,13 @@ void radioView(uint8_t* modes_stack, PeripheralsPack& pack) {
 	uint8_t info_move_delay_ticks = 10;
 	size_t info_len = strlen(music_info);
 
-	const char* ip = pack.wifi.get_ip("stream.rcs.revma.com");
+	const char* ip = pack.wifi.get_ip(current_station.domain);
 	wifi::Socket* socket = pack.wifi.open(0, wifi::SOCKET_TYPE::TCP, ip, 80);
 
 	// stream.rcs.revma.com/an1ugyygzk8uv
 	char* res;
-	char* request = "GET /an1ugyygzk8uv HTTP/1.0\r\nHost: stream.rcs.revma.com\r\n\r\n";
+	char request[256];
+	sprintf(request, "GET %s HTTP/1.0\r\nHost: %s\r\n\r\n", current_station.subdomain, current_station.domain);
 	if(socket->send(request, strlen(request))) {
 		res = socket->read(1460);
 	}

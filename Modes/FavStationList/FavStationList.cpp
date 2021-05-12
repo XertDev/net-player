@@ -4,7 +4,10 @@
 #include "ColorPalette.hpp"
 #include "Utils.hpp"
 
+#include <cstring>
+
 extern bool detected_touch;
+extern StationInfo current_station;
 
 constexpr uint8_t target_backlight_level = 100;
 
@@ -13,13 +16,38 @@ static void draw_background(LCDDisplay& display);
 static void draw_scroll_buttons(LCDDisplay& display);
 static void draw_scroll(LCDDisplay& display, uint8_t index, uint8_t area_count);
 static void draw_station_area_element(LCDDisplay& display, const char* station_label, uint8_t index);
+static void draw_station_areas(LCDDisplay& display, uint8_t scroll_index, const std::vector<StationInfo>& stations);
+
+
+const uint8_t stations_per_screen = 5;
 
 void favStationList(uint8_t* modes_stack, PeripheralsPack& pack) {
 	draw_background(pack.lcd_display);
 	draw_scroll_buttons(pack.lcd_display);
 
-	draw_scroll(pack.lcd_display, 2, 5);
-	draw_station_area_element(pack.lcd_display, "Turbo-op-stacja", 0);
+	FIL file;
+	std::vector<StationInfo> stations;
+	/*pack.storage.openFile("0:/station_list.txt", file);
+
+	char info_buffer[256];
+	do {
+		f_gets(info_buffer, sizeof(info_buffer), &file);
+		StationInfo station;
+		strcpy(station.label, strtok(info_buffer, ";"));
+		strcpy(station.domain, strtok(NULL, ";"));
+		strcpy(station.subdomain, strtok(NULL, "\0"));
+		stations.push_back(station);
+	} while(!f_eof(&file));
+
+	pack.storage.closeFile(file);*/
+	stations.push_back(StationInfo{"Radio 357", "stream.rcs.revma.com", "/an1ugyygzk8uv"});
+	stations.push_back(StationInfo{"Smooth Jazz Florida", "http://us4.internet-radio.com:8266", "/"});
+
+	uint8_t current_scroll_index = 0;
+	uint8_t areas_count = std::max((size_t) 1, (stations.size() - 1) / stations_per_screen + 1);
+
+	draw_scroll(pack.lcd_display, current_scroll_index, areas_count);
+	draw_station_areas(pack.lcd_display,  current_scroll_index, stations);
 
 
 	for(uint8_t i = pack.lcd_display.backlight(); i <= target_backlight_level; ++i) {
@@ -32,18 +60,32 @@ void favStationList(uint8_t* modes_stack, PeripheralsPack& pack) {
 	auto& touch_panel = pack.touch_panel;
 	while (true) {
 		while (detected_touch) {
-
 			if (touch_panel.detectTouch() == 1) {
 				auto touch_details = touch_panel.getDetails(0);
 				if (touch_details.event_type == 1) {
 					auto touch_info = touch_panel.getPoint(0);
-					if (inRange(touch_info.x, 0, 240) && inRange(touch_info.y, 0, 240)) {
+					if (inRange(touch_info.x, 0, 218)) {
+						uint32_t station_index = current_scroll_index * stations_per_screen + (touch_info.y/(240/stations_per_screen));
+						current_station = stations[station_index];
+
 						uint8_t *last = modes_stack;
 						while (*last != 0) {
 							++last;
 						}
 						*last = 5;
 						should_change_view = true;
+					} else if (inRange(touch_info.y, 0, 30)) {
+						if (current_scroll_index == 0) {
+							current_scroll_index = areas_count - 1;
+						} else {
+							--current_scroll_index;
+						}
+						draw_scroll(pack.lcd_display, current_scroll_index, areas_count);
+						draw_station_areas(pack.lcd_display, current_scroll_index, stations);
+					} else if(inRange(touch_info.y, 210, 240)) {
+						current_scroll_index = (current_scroll_index + 1) % areas_count;
+						draw_scroll(pack.lcd_display, current_scroll_index, areas_count);
+						draw_station_areas(pack.lcd_display, current_scroll_index, stations);
 					}
 				}
 			}
@@ -62,43 +104,61 @@ static void draw_background(LCDDisplay& display) {
 }
 
 static void draw_scroll_buttons(LCDDisplay& display) {
-	display.fillRect(229, 0, 11, 7, button_color_grey);
+	display.fillRect(219, 0, 21, 21, button_color_grey);
 	display.setBackgroundColor(button_color_grey);
-	for(int i = 0; i <= 4; ++i) {
-		display.drawHLine(235 - i, 1 + i, i*2 + 1, text_color_white);
+	for(int i = 0; i <= 8; ++i) {
+		display.drawHLine(229 - i, 6 + i, i*2 + 1, text_color_white);
 	}
 
-	display.fillRect(239, 233, 11, 7, button_color_grey);
+	display.fillRect(219, 219, 21, 21, button_color_grey);
 	display.setBackgroundColor(button_color_grey);
-	for(int i = 4; i >= 0; --i) {
-		display.drawHLine(235 - i, 238 - i, i*2 + 1, text_color_white);
+	for(int i = 8; i >= 0; --i) {
+		display.drawHLine(229 - i, 240 - 7 - i, i*2 + 1, text_color_white);
 	}
 }
 
 static void draw_scroll(LCDDisplay& display, uint8_t index, uint8_t area_count) {
-	uint8_t scroll_height = 226 / area_count;
-	display.fillRect(229, 7, 11, scroll_height * index, background_color_grey);
-	display.fillRect(229, 7 + scroll_height * index, 11, scroll_height, background_color_dark);
-	display.fillRect(229, 7 + scroll_height * (index + 1), 11, 226 - scroll_height * (index + 1), background_color_grey);
+	uint8_t scroll_height = 198 / area_count;
+	display.fillRect(219, 22, 21, scroll_height * index, background_color_dark);
+	display.fillRect(219, 22 + scroll_height * index, 21, scroll_height,  background_color_grey);
+	display.fillRect(219, 22 + scroll_height * (index + 1), 21, 198 - scroll_height * (index + 1), background_color_dark);
 }
 
 static void draw_station_area_element(LCDDisplay& display, const char* station_label, uint8_t index) {
-	uint8_t relative_index = index % 8;
+	uint8_t relative_index = index % stations_per_screen;
 	if(relative_index % 2 == 0) {
-		display.fillRect(0, 30 * relative_index, 198, 30, button_color_green);
-		display.setBackgroundColor(button_color_green);
-		display.drawString(3, 30 * relative_index + 3, station_label);
+		display.fillRect(0, 48 * relative_index, 218, 48, item_color_1_d);
+		display.setBackgroundColor(item_color_1_d);
 
-		display.fillRect(199, 30 * relative_index, 30, 30, button_color_red);
-		display.setBackgroundColor(button_color_red);
-		display.drawIcon(205, 30 * relative_index + 3, BIN);
 	} else {
-		display.fillRect(0, 30 * relative_index, 197, 30, button_color_lightgreen);
-		display.setBackgroundColor(button_color_lightgreen);
-		display.drawString(3, 30 * relative_index + 3, station_label);
+		display.fillRect(0, 48 * relative_index, 218, 48, item_color_1_l);
+		display.setBackgroundColor(item_color_1_l);
+	}
+	char label_part[12];
+	uint8_t chars = std::min((size_t)11, strlen(station_label));
+	strncpy(label_part, station_label, chars);
+	label_part[chars] = '\0';
+	display.drawString(3, 48 * relative_index, label_part);
+	chars = std::min((size_t)11, strlen(station_label + chars));
+	strncpy(label_part, station_label + 11, chars);
+	label_part[chars] = '\0';
+	display.drawString(3, 48 * relative_index + 24, label_part);
 
-		display.fillRect(199, 30 * relative_index, 30, 30, button_color_lightred);
-		display.setBackgroundColor(button_color_lightred);
-		display.drawIcon(205, 30 * relative_index + 3, BIN);
+	display.fillRect(189, 48 * relative_index, 30, 30, button_color_red);
+	display.setBackgroundColor(button_color_red);
+	display.drawIcon(195, 48 * relative_index + 3, BIN);
+}
+static void draw_empty_station_area_element(LCDDisplay& display, uint8_t index) {
+	uint8_t relative_index = index % stations_per_screen;
+	display.fillRect(0, 48*relative_index, 218, 48, background_color_dark);
+}
+static void draw_station_areas(LCDDisplay& display, uint8_t scroll_index, const std::vector<StationInfo>& stations) {
+	for(uint8_t i = 0; i < stations_per_screen; ++i) {
+		uint8_t station_index = scroll_index * stations_per_screen + i;
+		if(station_index < stations.size()) {
+			draw_station_area_element(display, stations[station_index].label, station_index);
+		} else {
+			draw_empty_station_area_element(display, station_index);
+		}
 	}
 }

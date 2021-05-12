@@ -59,6 +59,9 @@ TIM_HandleTypeDef htim9;
 SRAM_HandleTypeDef hsram1;
 SRAM_HandleTypeDef hsram2;
 
+
+struct StationInfo current_station;
+
 /* USER CODE BEGIN PV */
 
 /* USER CODE END PV */
