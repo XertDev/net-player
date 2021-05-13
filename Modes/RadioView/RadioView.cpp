@@ -7,6 +7,10 @@
 #include "main.h"
 #include "ColorPalette.hpp"
 #include "Utils.hpp"
+#include "StationInfo.hpp"
+
+
+#include "SpiritDSP_MP3_Dec/inc/spiritMP3Dec.h"
 
 extern I2S_HandleTypeDef hi2s2;
 
@@ -22,12 +26,37 @@ static void draw_station_change_button(LCDDisplay& display);
 
 constexpr uint8_t target_backlight_level = 100;
 
-constexpr uint16_t BUFFER_SIZE = 2048;
+constexpr uint16_t BUFFER_SIZE = 144000;
 static int16_t audio_data[2 * BUFFER_SIZE];
 static void play_tone(void);
 
+TSpiritMP3Decoder g_MP3Decoder;
 
 constexpr uint8_t text_delay = 5;
+
+unsigned int RetrieveMP3Data(void * pMP3CompressedData, unsigned int nMP3DataSizeInChars, void * token) {
+	size_t mp3_len;
+	char* mp3_info = ((wifi::Socket*) token)->read(nMP3DataSizeInChars, mp3_len);
+	memcpy((char*) pMP3CompressedData, mp3_info, mp3_len);
+	free(mp3_info);
+	return mp3_len;
+}
+
+bool transfer_enabled = false;
+bool first_half_ended = false;
+bool second_half_ended = false;
+
+void HAL_I2S_TxHalfCpltCallback(I2S_HandleTypeDef *hi2s) {
+	if(transfer_enabled) {
+		first_half_ended = true;
+	}
+}
+
+void HAL_I2S_TxCpltCallback(I2S_HandleTypeDef *hi2s) {
+	if(transfer_enabled) {
+		second_half_ended = true;
+	}
+}
 
 void radioView(uint8_t* modes_stack, PeripheralsPack& pack) {
 	draw_background(pack.lcd_display);
@@ -64,19 +93,46 @@ void radioView(uint8_t* modes_stack, PeripheralsPack& pack) {
 	char mp3_request[256];
 	sprintf(mp3_request, "GET %s HTTP/1.0\r\nHost: %s:%u\r\n\r\n", current_station.subdomain, current_station.domain, current_station.port);
 
-	char* new_music_info;
+	char* new_music_info = "xdddd";
 	char music_info_request[256];
 	sprintf(music_info_request, "GET /currentsong HTTP/1.0\r\nHost: %s:%u\r\n\r\n", current_station.domain, current_station.port);
 	if(mp3_socket->send(mp3_request, strlen(mp3_request))) {
 		res = mp3_socket->read(1460, mp3_len);
 	}
 
+	// Decoding
+
+	SpiritMP3DecoderInit(&g_MP3Decoder, RetrieveMP3Data, NULL, (void*) mp3_socket);
+	transfer_enabled = true;
+	uint32_t nSamples;
+
 	/* Main Loop */
 	bool should_change_view = false;
 	auto& touch_panel = pack.touch_panel;
-	while(true) {
-		mp3_info = mp3_socket->read(1460, mp3_len);
+	SpiritMP3Decode(&g_MP3Decoder, audio_data, BUFFER_SIZE, NULL);
+	HAL_I2S_Transmit(&hi2s2, (uint16_t*)audio_data, BUFFER_SIZE, HAL_MAX_DELAY);
 
+	uint8_t counter = 0;
+	while(true) {
+		/*if(first_half_ended) {
+			SpiritMP3Decode(&g_MP3Decoder, audio_data, BUFFER_SIZE/2, NULL);
+			first_half_ended = false;
+		} else if(second_half_ended) {
+			SpiritMP3Decode(&g_MP3Decoder, audio_data+BUFFER_SIZE, BUFFER_SIZE/2, NULL);
+			second_half_ended = false;
+		}*/
+		SpiritMP3Decode(&g_MP3Decoder, audio_data, BUFFER_SIZE, NULL);
+		HAL_I2S_Transmit(&hi2s2, (uint16_t*)audio_data, BUFFER_SIZE, HAL_MAX_DELAY);
+		/*if(counter%2 == 0) {
+			SpiritMP3Decode(&g_MP3Decoder, audio_data, BUFFER_SIZE/2, NULL);
+			HAL_I2S_Transmit(&hi2s2, (uint16_t*)audio_data, BUFFER_SIZE/2, HAL_MAX_DELAY);
+		} else {
+			SpiritMP3Decode(&g_MP3Decoder, audio_data + BUFFER_SIZE, BUFFER_SIZE/2, NULL);
+			HAL_I2S_Transmit(&hi2s2, (uint16_t*)(audio_data + BUFFER_SIZE), BUFFER_SIZE/2, HAL_MAX_DELAY);
+		}
+		counter = (counter+1)%2;*/
+
+		/*
 		wifi::Socket* music_info_socket = pack.wifi.open(1, wifi::SOCKET_TYPE::TCP, ip, current_station.port);
 		if(music_info_socket->send(music_info_request, strlen(music_info_request))) {
 			size_t new_music_info_len = 0;
@@ -98,8 +154,9 @@ void radioView(uint8_t* modes_stack, PeripheralsPack& pack) {
 			new_music_info[length] = 0;
 		}
 		music_info_socket->close();
+		*/
 
-		// TODO: Get music info
+		/*
 		if(strcmp(music_info, new_music_info) != 0) {
 			// Reset offset so that
 			if(strlen(music_info) < strlen(new_music_info)) {
@@ -122,7 +179,8 @@ void radioView(uint8_t* modes_stack, PeripheralsPack& pack) {
 			}
 		}
 		free(new_music_info);
-		draw_music_info(pack.lcd_display, music_info, info_offset);
+		*/
+		//draw_music_info(pack.lcd_display, music_info, info_offset);
 
 		while(detected_touch) {
 
@@ -145,6 +203,7 @@ void radioView(uint8_t* modes_stack, PeripheralsPack& pack) {
 		if(should_change_view) {
 			mp3_socket->close();
 			free(music_info);
+			transfer_enabled = false;
 			break;
 		}
 	}

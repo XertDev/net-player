@@ -3,6 +3,7 @@
 #include "main.h"
 #include "ColorPalette.hpp"
 #include "Utils.hpp"
+#include "StationInfo.hpp"
 
 #include <cstring>
 

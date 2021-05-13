@@ -12,6 +12,8 @@
 #include "WifiPanel/WifiPanel.hpp"
 #include "TouchDebugView/TouchDebugView.hpp"
 #include "Config/WifiFileConfig.hpp"
+#include "StationInfo.hpp"
+
 
 extern TIM_HandleTypeDef htim9;
 extern SD_HandleTypeDef hsd;
@@ -19,6 +21,7 @@ extern FMPI2C_HandleTypeDef hfmpi2c1;
 extern I2S_HandleTypeDef hi2s2;
 extern SPI_HandleTypeDef hspi3;
 
+StationInfo current_station;
 
 extern bool detected_touch;
 
@@ -95,8 +98,8 @@ void main_cpp() {
 	pack.touch_panel.id();
 	pack.touch_panel.setThreshhold(20);
 
-	pack.codec.init(audio::OUTPUT_DEVICE::HEADPHONE, audio::FREQUENCY::FREQ_44K);
-	pack.codec.setVolume(100);
+	pack.codec.init(audio::OUTPUT_DEVICE::HEADPHONE, audio::FREQUENCY::FREQ_48K);
+	pack.codec.setVolume(2);
 
 	uint8_t modes_stack[16] = {1, 0};
 	void (*modes[])(uint8_t* modes_stack, PeripheralsPack& pack) =
