@@ -100,7 +100,7 @@ void main_cpp() {
 	pack.touch_panel.id();
 	pack.touch_panel.setThreshhold(20);
 
-	pack.codec.init(audio::OUTPUT_DEVICE::HEADPHONE, audio::FREQUENCY::FREQ_48K);
+	pack.codec.init(audio::OUTPUT_DEVICE::HEADPHONE, audio::FREQUENCY::FREQ_44K);
 	pack.codec.setVolume(2);
 
 	uint8_t modes_stack[16] = {1, 0};

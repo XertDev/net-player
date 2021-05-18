@@ -11,46 +11,47 @@ wifi::Socket::Socket(wifi::Wifi *wifi, uint8_t socket_id)
 : wifi_(wifi), socket_id_(socket_id) {
 }
 
-bool wifi::Socket::read(void* dest_buffer, size_t size, size_t& length) {
+char* wifi::Socket::read(size_t size, size_t& length) {
 	assert(size > 0 && size <= 1460);
-	char temp[128] = {0};
-	// set socket id
-	sprintf(temp, "P0=%d\r", socket_id_);
-	wifi_->spi_.send(temp, 0xFFFF);
-	if(!wifi_->check_response_ok()) {
-		return false;
-	}
-
-	char buffer[256];
-	sprintf(buffer, "R1=%u\r", size);
-	wifi_->spi_.send(buffer, 0xFFFF);
-	if(!wifi_->check_response_ok()) {
-		return false;
-	}
-
-	sprintf(buffer, "R0\r");
-	wifi_->spi_.send(buffer, 0xFFFF);
-	wifi_->spi_.receive(buffer, 2, 0xFFFF);
-
-	char* response = (char*) malloc(size + 8);
-	uint32_t received = wifi_->spi_.receive(response, size+8, 0xFFFF);
-
-	size_t real_length = 0;
-	for(; real_length < received - 8; ++ real_length) {
-		char* search_start = response + real_length;
-		if(strncmp(search_start, "\r\nOK\r\n", 8) == 0) {
-			break;
+		char temp[128] = {0};
+		// set socket id
+		sprintf(temp, "P0=%d\r", socket_id_);
+		wifi_->spi_.send(temp, 0xFFFF);
+		if(!wifi_->check_response_ok()) {
+			return nullptr;
 		}
-	}
 
-	length = real_length;
-	if(real_length == 0) {
-		return false;
-	} else {
-		memcpy((char*) dest_buffer, response, real_length);
-		free(response);
-		return true;
-	}
+		char buffer[256];
+		sprintf(buffer, "R1=%u\r", size);
+		wifi_->spi_.send(buffer, 0xFFFF);
+		if(!wifi_->check_response_ok()) {
+			return nullptr;
+		}
+
+		sprintf(buffer, "R0\r");
+		wifi_->spi_.send(buffer, 0xFFFF);
+		wifi_->spi_.receive(buffer, 2, 0xFFFF);
+
+		char* response = (char*) malloc(size + 8);
+		uint32_t received = wifi_->spi_.receive(response, size+8, 0xFFFF);
+
+		size_t real_length = 0;
+		for(; real_length < received - 8; ++ real_length) {
+			char* search_start = response + real_length;
+			if(strncmp(search_start, "\r\nOK\r\n", 8) == 0) {
+				break;
+			}
+		}
+
+		length = real_length;
+		if(real_length == 0) {
+			return nullptr;
+		} else {
+			char* real_response = (char*)malloc(real_length);
+			memcpy(real_response, response, real_length);
+			free(response);
+			return real_response;
+		}
 }
 
 bool wifi::Socket::send(char* buffer, size_t size) {

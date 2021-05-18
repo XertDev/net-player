@@ -191,7 +191,7 @@ void SystemClock_Config(void)
   PeriphClkInitStruct.PeriphClockSelection = RCC_PERIPHCLK_I2S_APB1|RCC_PERIPHCLK_RTC
                               |RCC_PERIPHCLK_SDIO|RCC_PERIPHCLK_CLK48
                               |RCC_PERIPHCLK_FMPI2C1|RCC_PERIPHCLK_LPTIM1;
-  PeriphClkInitStruct.PLLI2S.PLLI2SN = 86;
+  PeriphClkInitStruct.PLLI2S.PLLI2SN = 90;
   PeriphClkInitStruct.PLLI2S.PLLI2SM = 8;
   PeriphClkInitStruct.PLLI2S.PLLI2SR = 2;
   PeriphClkInitStruct.PLLI2S.PLLI2SQ = 2;
@@ -294,7 +294,7 @@ static void MX_I2S2_Init(void)
   hi2s2.Init.Standard = I2S_STANDARD_PHILIPS;
   hi2s2.Init.DataFormat = I2S_DATAFORMAT_16B;
   hi2s2.Init.MCLKOutput = I2S_MCLKOUTPUT_ENABLE;
-  hi2s2.Init.AudioFreq = I2S_AUDIOFREQ_48K;
+  hi2s2.Init.AudioFreq = I2S_AUDIOFREQ_44K;
   hi2s2.Init.CPOL = I2S_CPOL_LOW;
   hi2s2.Init.ClockSource = I2S_CLOCK_PLL;
   hi2s2.Init.FullDuplexMode = I2S_FULLDUPLEXMODE_DISABLE;
@@ -522,7 +522,7 @@ static void MX_DMA_Init(void)
 
   /* DMA interrupt init */
   /* DMA1_Stream4_IRQn interrupt configuration */
-  HAL_NVIC_SetPriority(DMA1_Stream4_IRQn, 0, 0);
+  HAL_NVIC_SetPriority(DMA1_Stream4_IRQn, 1, 0);
   HAL_NVIC_EnableIRQ(DMA1_Stream4_IRQn);
 
 }
