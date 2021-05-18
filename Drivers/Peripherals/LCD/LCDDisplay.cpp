@@ -292,7 +292,7 @@ void LCDDisplay::drawIcon(uint16_t x, uint16_t y, Icons icon) {
 	const auto &height = properties_.font->height;
 	const auto &width = properties_.font->width;
 	const uint8_t font_width_bytes = (width + 7) / 8;
-	const uint8_t *icon_data = &properties_.icon_font->table[icon];
+	const uint8_t *icon_data = &properties_.icon_font->table[icon * height * font_width_bytes];
 
 	const uint16_t offset = 8 * font_width_bytes - width;
 	uint32_t line = 0;

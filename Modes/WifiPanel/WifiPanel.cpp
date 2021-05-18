@@ -7,6 +7,7 @@
 #include "Utils.hpp"
 
 extern bool detected_touch;
+extern wifi::AP current_wifi;
 
 static void draw_background(LCDDisplay& display);
 static void draw_back_button(LCDDisplay& display);
@@ -80,27 +81,13 @@ void wifiPanel(uint8_t* modes_stack, PeripheralsPack& pack) {
 								pack.wifi.disconnect();
 							}
 
-							auto wifi = wifis[selected_index];
-							// TODO: For now it is hardcoded with one password for known networks
-							bool connected = false;
-							if(strcmp(wifi.ssid, "Majkel") == 0) {
-								connected = pack.wifi.connect("Majkel", "Chyba ty", wifi.security);
-							} else if(strcmp(wifi.ssid, "TymekWifi") == 0) {
-								connected = pack.wifi.connect(wifi.ssid, "NieZgadniesz", wifi.security);
-							} else if(strcmp(wifi.ssid, "Poco Michal") == 0) {
-								connected = pack.wifi.connect(wifi.ssid, "", wifi.security);
-							} else if(strcmp(wifi.ssid, "worldcreator") == 0) {
-								connected = pack.wifi.connect(wifi.ssid, "12345678", wifi.security);
+							current_wifi = wifis[selected_index];
+							uint8_t *last = modes_stack;
+							while (*last != 0) {
+								++last;
 							}
-							// If connected successfully, go back to the main screen
-							if (connected) {
-								uint8_t *last = modes_stack;
-								while (*last != 0) {
-									++last;
-								}
-								*last = 1;
-								should_change_view = true;
-							}
+							*last = 6;
+							should_change_view = true;
 						}
 					}
 				}

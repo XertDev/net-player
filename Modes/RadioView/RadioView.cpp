@@ -26,9 +26,8 @@ static void draw_station_change_button(LCDDisplay& display);
 
 constexpr uint8_t target_backlight_level = 100;
 
-constexpr uint16_t BUFFER_SIZE = 144000;
+constexpr uint16_t BUFFER_SIZE = 576;
 static int16_t audio_data[2 * BUFFER_SIZE];
-static void play_tone(void);
 
 TSpiritMP3Decoder g_MP3Decoder;
 
@@ -36,15 +35,13 @@ constexpr uint8_t text_delay = 5;
 
 unsigned int RetrieveMP3Data(void * pMP3CompressedData, unsigned int nMP3DataSizeInChars, void * token) {
 	size_t mp3_len;
-	char* mp3_info = ((wifi::Socket*) token)->read(nMP3DataSizeInChars, mp3_len);
-	memcpy((char*) pMP3CompressedData, mp3_info, mp3_len);
-	free(mp3_info);
+	((wifi::Socket*) token)->read(pMP3CompressedData, nMP3DataSizeInChars, mp3_len);
 	return mp3_len;
 }
 
 bool transfer_enabled = false;
 bool first_half_ended = false;
-bool second_half_ended = false;
+bool second_half_ended = true;
 
 void HAL_I2S_TxHalfCpltCallback(I2S_HandleTypeDef *hi2s) {
 	if(transfer_enabled) {
@@ -62,7 +59,7 @@ void radioView(uint8_t* modes_stack, PeripheralsPack& pack) {
 	draw_background(pack.lcd_display);
 
 	draw_station_name(pack.lcd_display, current_station.label);
-	draw_music_info(pack.lcd_display, "", 0);
+	draw_music_info(pack.lcd_display, "startup-info", 0);
 	draw_volume_info(pack.lcd_display);
 	update_volume_info(pack.lcd_display, pack.codec);
 	draw_station_change_button(pack.lcd_display);
@@ -74,10 +71,6 @@ void radioView(uint8_t* modes_stack, PeripheralsPack& pack) {
 
 	// TODO: Handle volume change and display changed volume
 
-	// TODO: Handle extracting current station info and displaying it on the screen
-
-	//play_tone();
-
 	char* music_info = (char*) malloc(10);
 	uint8_t info_offset = 0;
 	uint8_t info_move_delay_ticks = text_delay;
@@ -87,7 +80,7 @@ void radioView(uint8_t* modes_stack, PeripheralsPack& pack) {
 	wifi::Socket* mp3_socket = pack.wifi.open(0, wifi::SOCKET_TYPE::TCP, ip, current_station.port);
 
 	// stream.rcs.revma.com/an1ugyygzk8uv
-	char* res;
+	char* res = (char*) malloc(1460);
 	char* mp3_info;
 	size_t mp3_len;
 	char mp3_request[256];
@@ -97,7 +90,8 @@ void radioView(uint8_t* modes_stack, PeripheralsPack& pack) {
 	char music_info_request[256];
 	sprintf(music_info_request, "GET /currentsong HTTP/1.0\r\nHost: %s:%u\r\n\r\n", current_station.domain, current_station.port);
 	if(mp3_socket->send(mp3_request, strlen(mp3_request))) {
-		res = mp3_socket->read(1460, mp3_len);
+		mp3_socket->read((void*) res, 1460, mp3_len);
+		free(res);
 	}
 
 	// Decoding
@@ -109,20 +103,24 @@ void radioView(uint8_t* modes_stack, PeripheralsPack& pack) {
 	/* Main Loop */
 	bool should_change_view = false;
 	auto& touch_panel = pack.touch_panel;
-	SpiritMP3Decode(&g_MP3Decoder, audio_data, BUFFER_SIZE, NULL);
-	HAL_I2S_Transmit(&hi2s2, (uint16_t*)audio_data, BUFFER_SIZE, HAL_MAX_DELAY);
+	SpiritMP3Decode(&g_MP3Decoder, audio_data, BUFFER_SIZE/2, NULL);
+	//HAL_I2S_Transmit(&hi2s2, (uint16_t*)audio_data, BUFFER_SIZE, HAL_MAX_DELAY);
+	HAL_I2S_Transmit_DMA(&hi2s2, (uint16_t*)audio_data, BUFFER_SIZE);
 
 	uint8_t counter = 0;
 	while(true) {
-		/*if(first_half_ended) {
-			SpiritMP3Decode(&g_MP3Decoder, audio_data, BUFFER_SIZE/2, NULL);
+		if(first_half_ended) {
+			SpiritMP3Decode(&g_MP3Decoder, audio_data+BUFFER_SIZE, BUFFER_SIZE/2, NULL);
 			first_half_ended = false;
 		} else if(second_half_ended) {
-			SpiritMP3Decode(&g_MP3Decoder, audio_data+BUFFER_SIZE, BUFFER_SIZE/2, NULL);
+			SpiritMP3Decode(&g_MP3Decoder, audio_data, BUFFER_SIZE/2, NULL);
 			second_half_ended = false;
-		}*/
-		SpiritMP3Decode(&g_MP3Decoder, audio_data, BUFFER_SIZE, NULL);
-		HAL_I2S_Transmit(&hi2s2, (uint16_t*)audio_data, BUFFER_SIZE, HAL_MAX_DELAY);
+		}
+
+		//SpiritMP3Decode(&g_MP3Decoder, audio_data, BUFFER_SIZE, NULL);
+		//HAL_I2S_Transmit(&hi2s2, (uint16_t*)audio_data, BUFFER_SIZE, HAL_MAX_DELAY);
+
+
 		/*if(counter%2 == 0) {
 			SpiritMP3Decode(&g_MP3Decoder, audio_data, BUFFER_SIZE/2, NULL);
 			HAL_I2S_Transmit(&hi2s2, (uint16_t*)audio_data, BUFFER_SIZE/2, HAL_MAX_DELAY);
@@ -256,17 +254,4 @@ static void draw_station_change_button(LCDDisplay& display) {
 	display.fillRect(0, 190, 240, 40, button_color_orange);
 	display.setBackgroundColor(button_color_orange);
 	display.drawString(8, 198, "Change station");
-}
-
-static void play_tone(void) {
-    for (int i = 0; i < BUFFER_SIZE; i++) {
-        int16_t value = (int16_t)(32000.0 * sin(2.0 * M_PI * i / 22.0));
-        audio_data[i * 2] = value;
-        audio_data[i * 2 + 1] = value;
-    }
-
-    while (1)
-    {
-        HAL_I2S_Transmit(&hi2s2, (uint16_t*)audio_data, 2 * BUFFER_SIZE, HAL_MAX_DELAY);
-    }
 }

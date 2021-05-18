@@ -30,7 +30,7 @@ struct Point {
 
 enum Icons{
 	BIN = 0,
-	HEART = 1
+	SHIFT = 1
 };
 
 constexpr Color from_r8g8b8(uint8_t r, uint8_t g, uint8_t b) {

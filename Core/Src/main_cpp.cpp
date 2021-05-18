@@ -11,6 +11,7 @@
 #include "StationSelectChoiceView/StationSelectChoiceView.hpp"
 #include "WifiPanel/WifiPanel.hpp"
 #include "TouchDebugView/TouchDebugView.hpp"
+#include "WifiAuthView/WifiAuthView.hpp"
 #include "Config/WifiFileConfig.hpp"
 #include "StationInfo.hpp"
 
@@ -22,6 +23,7 @@ extern I2S_HandleTypeDef hi2s2;
 extern SPI_HandleTypeDef hspi3;
 
 StationInfo current_station;
+wifi::AP current_wifi;
 
 extern bool detected_touch;
 
@@ -109,7 +111,7 @@ void main_cpp() {
 		stationInput,
 		wifiPanel,
 		radioView,
-		touchDebugView
+		wifiAuthView,
 	};
 
 	while(true) {
