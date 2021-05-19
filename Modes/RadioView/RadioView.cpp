@@ -14,7 +14,7 @@
 
 extern I2S_HandleTypeDef hi2s2;
 
-extern bool detected_touch;
+extern bool volatile detected_touch;
 extern StationInfo current_station;
 
 static void draw_background(LCDDisplay& display);
@@ -26,7 +26,7 @@ static void draw_station_change_button(LCDDisplay& display);
 
 constexpr uint8_t target_backlight_level = 100;
 
-constexpr uint16_t BUFFER_SIZE = 4086;//576;
+constexpr uint16_t BUFFER_SIZE = 4048;//576;
 static int16_t audio_data[BUFFER_SIZE];
 
 FIL testFile;
@@ -39,10 +39,10 @@ constexpr uint8_t text_delay = 5;
 
 unsigned int RetrieveMP3Data(void * pMP3CompressedData, unsigned int nMP3DataSizeInChars, void * token) {
 	size_t mp3_len;
-	//((wifi::Socket*) token)->read(pMP3CompressedData, nMP3DataSizeInChars, mp3_len);
-	char* mp3_info = ((wifi::Socket*) token)->read(nMP3DataSizeInChars, mp3_len);
-	memcpy((char*) pMP3CompressedData, mp3_info, mp3_len);
-	free(mp3_info);
+	((wifi::Socket*) token)->read(pMP3CompressedData, nMP3DataSizeInChars, mp3_len);
+	//char* mp3_info = ((wifi::Socket*) token)->read(nMP3DataSizeInChars, mp3_len);
+	//memcpy((char*) pMP3CompressedData, mp3_info, mp3_len);
+	//free(mp3_info);
 	return mp3_len;
 }
 unsigned int RetrieveMP3DataTest(void * pMP3CompressedData, unsigned int nMP3DataSizeInChars, void * token) {
@@ -101,12 +101,12 @@ void radioView(uint8_t* modes_stack, PeripheralsPack& pack) {
 	char mp3_request[256];
 	sprintf(mp3_request, "GET %s HTTP/1.0\r\nHost: %s:%u\r\n\r\n", current_station.subdomain, current_station.domain, current_station.port);
 
-	char* new_music_info = "xdddd";
+	char* new_music_info = (char*) calloc(400, sizeof(char));
 	char music_info_request[256];
 	sprintf(music_info_request, "GET /currentsong HTTP/1.0\r\nHost: %s:%u\r\n\r\n", current_station.domain, current_station.port);
 	if(mp3_socket->send(mp3_request, strlen(mp3_request))) {
-		//mp3_socket->read((void*) res, 1460, mp3_len);
-		res = mp3_socket->read(1460, mp3_len);
+		mp3_socket->read((void*) res, 1460, mp3_len);
+		//res = mp3_socket->read(1460, mp3_len);
 		free(res);
 	}
 
@@ -137,13 +137,13 @@ void radioView(uint8_t* modes_stack, PeripheralsPack& pack) {
 	while(true) {
 //		SpiritMP3Decode(&g_MP3Decoder, sound, BUFFER_SIZE, NULL);
 //		HAL_I2S_Transmit(&hi2s2, (uint16_t*)sound, BUFFER_SIZE*2, HAL_MAX_DELAY);
-		if(first_half_ended) {
-//			SpiritMP3Decode(&g_MP3Decoder, sound+BUFFER_SIZE/4, BUFFER_SIZE/4, NULL);
-			first_half_ended = false;
-		} else if(second_half_ended) {
-//			SpiritMP3Decode(&g_MP3Decoder, sound, BUFFER_SIZE/4, NULL);
-			second_half_ended = false;
-		}
+//		if(first_half_ended) {
+////			SpiritMP3Decode(&g_MP3Decoder, sound+BUFFER_SIZE/4, BUFFER_SIZE/4, NULL);
+//			first_half_ended = false;
+//		} else if(second_half_ended) {
+////			SpiritMP3Decode(&g_MP3Decoder, sound, BUFFER_SIZE/4, NULL);
+//			second_half_ended = false;
+//		}
 
 		//SpiritMP3Decode(&g_MP3Decoder, audio_data, BUFFER_SIZE, NULL);
 		//HAL_I2S_Transmit(&hi2s2, (uint16_t*)audio_data, BUFFER_SIZE, HAL_MAX_DELAY);
@@ -159,54 +159,54 @@ void radioView(uint8_t* modes_stack, PeripheralsPack& pack) {
 		counter = (counter+1)%2;*/
 
 
-		wifi::Socket* music_info_socket = pack.wifi.open(1, wifi::SOCKET_TYPE::TCP, ip, current_station.port);
-		if(music_info_socket->send(music_info_request, strlen(music_info_request))) {
-			size_t new_music_info_len = 0;
-			new_music_info = music_info_socket->read(400, new_music_info_len);
-			char* temp = strstr(new_music_info, "\r\n") +2;
-			while(strncmp(temp, "Content-Length:", 15) != 0) {
-				temp = strstr(temp, "\r\n") + 2;
-			}
-			temp += 15;
-			char* end = strstr(temp, "\r\n");
-			char* content_length = (char*) malloc(end-temp+1);
-			memcpy(content_length, temp, end-temp);
-			content_length[end-temp] = 0;
-			int length = atoi(content_length);
-			free(content_length);
-			temp = strstr(temp, "\r\n\r\n")+4;
-
-			memcpy(new_music_info, temp, length);
-			new_music_info[length] = 0;
-		}
-		music_info_socket->close();
-
-
-
-		if(strcmp(music_info, new_music_info) != 0) {
-			// Reset offset so that
-			if(strlen(music_info) < strlen(new_music_info)) {
-				music_info = (char*) realloc(music_info, strlen(new_music_info) + 1);
-			}
-			strcpy(music_info, new_music_info);
-			info_offset = 0;
-			info_move_delay_ticks = text_delay;
-			info_len = strlen(music_info);
-		} else {
-			if(info_len <= 14) {
-
-			} else if(info_move_delay_ticks > 0) {
-				--info_move_delay_ticks;
-			} else {
-				info_offset = (info_offset + 1) % info_len;
-				if(info_offset == 0) {
-					info_move_delay_ticks = text_delay;
-				}
-			}
-		}
-		free(new_music_info);
-
-		draw_music_info(pack.lcd_display, music_info, info_offset);
+//		wifi::Socket* music_info_socket = pack.wifi.open(1, wifi::SOCKET_TYPE::TCP, ip, current_station.port);
+//		if(music_info_socket->send(music_info_request, strlen(music_info_request))) {
+//			size_t new_music_info_len = 0;
+//			music_info_socket->read(new_music_info, 400, new_music_info_len);
+//			char* temp = strstr(new_music_info, "\r\n") +2;
+//			while(strncmp(temp, "Content-Length:", 15) != 0) {
+//				temp = strstr(temp, "\r\n") + 2;
+//			}
+//			temp += 15;
+//			char* end = strstr(temp, "\r\n");
+//			char* content_length = (char*) malloc(end-temp+1);
+//			memcpy(content_length, temp, end-temp);
+//			content_length[end-temp] = 0;
+//			int length = atoi(content_length);
+//			free(content_length);
+//			temp = strstr(temp, "\r\n\r\n")+4;
+//
+//			memcpy(new_music_info, temp, length);
+//			new_music_info[length] = 0;
+//		}
+//		music_info_socket->close();
+//
+//
+//
+//		if(strcmp(music_info, new_music_info) != 0) {
+//			// Reset offset so that
+//			if(strlen(music_info) < strlen(new_music_info)) {
+//				music_info = (char*) realloc(music_info, strlen(new_music_info) + 1);
+//			}
+//			strcpy(music_info, new_music_info);
+//			info_offset = 0;
+//			info_move_delay_ticks = text_delay;
+//			info_len = strlen(music_info);
+//		} else {
+//			if(info_len <= 14) {
+//
+//			} else if(info_move_delay_ticks > 0) {
+//				--info_move_delay_ticks;
+//			} else {
+//				info_offset = (info_offset + 1) % info_len;
+//				if(info_offset == 0) {
+//					info_move_delay_ticks = text_delay;
+//				}
+//			}
+//		}
+//		free(new_music_info);
+//
+//		draw_music_info(pack.lcd_display, music_info, info_offset);
 
 		while(detected_touch) {
 

@@ -2,6 +2,7 @@
 #include <cassert>
 #include <cstring>
 
+
 wifi::detail::WifiSPI::WifiSPI(WifiIOSettings io_settings)
 : io_settings_(io_settings)
 {

@@ -6,7 +6,7 @@
 #include "ColorPalette.hpp"
 #include "Utils.hpp"
 
-extern bool detected_touch;
+extern bool volatile detected_touch;
 
 static void draw_background(LCDDisplay& display);
 static void draw_y(LCDDisplay& display, int y);

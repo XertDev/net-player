@@ -43,7 +43,7 @@
 
 /* Private variables ---------------------------------------------------------*/
 /* USER CODE BEGIN PV */
-bool detected_touch = false;
+bool volatile detected_touch = false;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/

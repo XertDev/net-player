@@ -7,7 +7,7 @@
 
 #include <cstring>
 
-extern bool detected_touch;
+extern bool volatile detected_touch;
 extern StationInfo current_station;
 
 constexpr uint8_t target_backlight_level = 100;
@@ -79,6 +79,11 @@ void favStationList(uint8_t* modes_stack, PeripheralsPack& pack) {
 					auto touch_info = touch_panel.getPoint(0);
 					if (inRange(touch_info.x, 0, 218)) {
 						uint32_t station_index = current_scroll_index * stations_per_screen + (touch_info.y/(240/stations_per_screen));
+
+						if(station_index >= stations.size()) {
+							continue;
+						}
+
 						current_station = stations[station_index];
 
 						uint8_t *last = modes_stack;

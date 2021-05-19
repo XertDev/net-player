@@ -11,21 +11,21 @@ wifi::Socket::Socket(wifi::Wifi *wifi, uint8_t socket_id)
 : wifi_(wifi), socket_id_(socket_id) {
 }
 
-char* wifi::Socket::read(size_t size, size_t& length) {
+bool wifi::Socket::read(void* dest_buffer, size_t size, size_t& length) {
 	assert(size > 0 && size <= 1460);
 		char temp[128] = {0};
 		// set socket id
 		sprintf(temp, "P0=%d\r", socket_id_);
 		wifi_->spi_.send(temp, 0xFFFF);
 		if(!wifi_->check_response_ok()) {
-			return nullptr;
+			return false;
 		}
 
 		char buffer[256];
 		sprintf(buffer, "R1=%u\r", size);
 		wifi_->spi_.send(buffer, 0xFFFF);
 		if(!wifi_->check_response_ok()) {
-			return nullptr;
+			return false;
 		}
 
 		sprintf(buffer, "R0\r");
@@ -45,12 +45,11 @@ char* wifi::Socket::read(size_t size, size_t& length) {
 
 		length = real_length;
 		if(real_length == 0) {
-			return nullptr;
+			return false;
 		} else {
-			char* real_response = (char*)malloc(real_length);
-			memcpy(real_response, response, real_length);
+			memcpy(dest_buffer, response, real_length);
 			free(response);
-			return real_response;
+			return true;
 		}
 }
 

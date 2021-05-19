@@ -7,7 +7,7 @@
 #include "Utils.hpp"
 #include "Wifi/Utils.hpp"
 
-extern bool detected_touch;
+extern bool volatile detected_touch;
 extern wifi::AP current_wifi;
 
 static void draw_background(LCDDisplay& display);

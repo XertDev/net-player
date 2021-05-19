@@ -4,7 +4,7 @@
 #include "ColorPalette.hpp"
 #include "Utils.hpp"
 
-extern bool detected_touch;
+extern bool volatile detected_touch;
 
 constexpr uint8_t target_backlight_level = 100;
 
