@@ -16,6 +16,7 @@ namespace wifi
 			void init();
 
 			size_t receive(char* data, uint16_t len, uint32_t timeout);
+			size_t receive_fast(char* data, uint16_t len, uint32_t timeout);
 			size_t send(const char* const data, uint16_t len, uint32_t timeout);
 			size_t send(const char* const data, uint32_t timeout);
 

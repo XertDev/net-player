@@ -343,6 +343,21 @@ bool wifi::Wifi::check_response_ok() {
 
 	return true;
 }
+bool wifi::Wifi::check_response_ok_fast() {
+	char buffer[128] = {0};
+	uint8_t received = spi_.receive_fast(buffer, 128, 0xFFFF);
+	buffer[received] = 0;
+	char* ok_response = strstr(buffer, "OK\r\n");
+	if(ok_response == nullptr) {
+		return false;
+	}
+	char *prompt = strstr(ok_response+4, "> ");
+	if(prompt == nullptr) {
+		return false;
+	}
+
+	return true;
+}
 bool wifi::Wifi::is_connected() {
 	return this->connected_state_;
 }

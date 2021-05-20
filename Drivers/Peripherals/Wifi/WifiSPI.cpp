@@ -3,6 +3,7 @@
 #include <cstring>
 
 
+
 wifi::detail::WifiSPI::WifiSPI(WifiIOSettings io_settings)
 : io_settings_(io_settings)
 {
@@ -40,13 +41,13 @@ void wifi::detail::WifiSPI::reset()
 void wifi::detail::WifiSPI::enable_nss()
 {
 	HAL_GPIO_WritePin(io_settings_.nss.GPIOx, io_settings_.nss.GPIO_Pin, GPIO_PIN_RESET);
-	HAL_Delay(10);
+//	HAL_Delay(1);
 }
 
 void wifi::detail::WifiSPI::disable_nss()
 {
 	HAL_GPIO_WritePin(io_settings_.nss.GPIOx, io_settings_.nss.GPIO_Pin, GPIO_PIN_SET);
-	HAL_Delay(10);
+	HAL_Delay(1);
 }
 
 size_t wifi::detail::WifiSPI::receive(char* data, uint16_t len, uint32_t timeout)
@@ -72,6 +73,25 @@ size_t wifi::detail::WifiSPI::receive(char* data, uint16_t len, uint32_t timeout
 	}
 
 	if(*(--data) == 0x15)
+	{
+		--length;
+	}
+
+	disable_nss();
+
+	return length;
+}
+
+size_t wifi::detail::WifiSPI::receive_fast(char* data, uint16_t len, uint32_t timeout)
+{
+	disable_nss();
+	while(!is_cmddata_ready()){}
+	enable_nss();
+	int16_t length = len/2;
+
+	HAL_SPI_Receive(&io_settings_.data, reinterpret_cast<uint8_t*>(data), (len+1)/2, timeout);
+
+	if(*(data+len) == 0x15)
 	{
 		--length;
 	}

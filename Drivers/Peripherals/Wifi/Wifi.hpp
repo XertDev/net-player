@@ -29,8 +29,13 @@ namespace wifi
 		bool is_connected();
 		const char* get_connected_name();
 	private:
+		int8_t current_socket = -1;
+		uint16_t packet_size = 0;
+		uint16_t packet_timeout = 500;
+
 		friend class Socket;
 		bool check_response_ok();
+		bool check_response_ok_fast();
 		detail::WifiSPI spi_;
 		bool connected_state_ = false;
 		char* connected_name_ = "";

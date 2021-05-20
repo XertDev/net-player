@@ -26,8 +26,7 @@ static void draw_station_change_button(LCDDisplay& display);
 
 constexpr uint8_t target_backlight_level = 100;
 
-constexpr uint16_t BUFFER_SIZE = 4048;//576;
-static int16_t audio_data[BUFFER_SIZE];
+constexpr uint16_t BUFFER_SIZE = 1024;//576;
 
 FIL testFile;
 int16_t sound[2 * BUFFER_SIZE];
@@ -39,10 +38,11 @@ constexpr uint8_t text_delay = 5;
 
 unsigned int RetrieveMP3Data(void * pMP3CompressedData, unsigned int nMP3DataSizeInChars, void * token) {
 	size_t mp3_len;
+	HAL_GPIO_WritePin(LED2_GREEN_GPIO_Port, LED2_GREEN_Pin, GPIO_PIN_SET);
 	((wifi::Socket*) token)->read(pMP3CompressedData, nMP3DataSizeInChars, mp3_len);
-	//char* mp3_info = ((wifi::Socket*) token)->read(nMP3DataSizeInChars, mp3_len);
-	//memcpy((char*) pMP3CompressedData, mp3_info, mp3_len);
-	//free(mp3_info);
+	HAL_GPIO_WritePin(LED2_GREEN_GPIO_Port, LED2_GREEN_Pin, GPIO_PIN_RESET);
+	HAL_GPIO_WritePin(LED1_RED_GPIO_Port, LED1_RED_Pin, GPIO_PIN_SET);
+
 	return mp3_len;
 }
 unsigned int RetrieveMP3DataTest(void * pMP3CompressedData, unsigned int nMP3DataSizeInChars, void * token) {
@@ -58,16 +58,27 @@ void HAL_I2S_TxHalfCpltCallback(I2S_HandleTypeDef *hi2s) {
 	if(transfer_enabled) {
 		first_half_ended = true;
 		SpiritMP3Decode(&g_MP3Decoder, sound, BUFFER_SIZE/2, NULL);
+		HAL_GPIO_WritePin(LED1_RED_GPIO_Port, LED1_RED_Pin, GPIO_PIN_RESET);
+
 	}
 }
 
 void HAL_I2S_TxCpltCallback(I2S_HandleTypeDef *hi2s) {
 	if(transfer_enabled) {
 		SpiritMP3Decode(&g_MP3Decoder, sound+BUFFER_SIZE, BUFFER_SIZE/2, NULL);
-
+		HAL_GPIO_WritePin(LED1_RED_GPIO_Port, LED1_RED_Pin, GPIO_PIN_RESET);
 		second_half_ended = true;
 	}
 }
+//
+//void HAL_I2S_TxCpltCallback(I2S_HandleTypeDef *hi2s) {
+//	if(transfer_enabled) {
+//		SpiritMP3Decode(&g_MP3Decoder, sound, BUFFER_SIZE, NULL);
+//		HAL_GPIO_WritePin(LED1_RED_GPIO_Port, LED1_RED_Pin, GPIO_PIN_RESET);
+//		second_half_ended = true;
+//		HAL_I2S_Transmit_IT(&hi2s2, (uint16_t*)sound, BUFFER_SIZE*2);
+//	}
+//}
 
 void radioView(uint8_t* modes_stack, PeripheralsPack& pack) {
 	draw_background(pack.lcd_display);
@@ -95,7 +106,7 @@ void radioView(uint8_t* modes_stack, PeripheralsPack& pack) {
 
 	// stream.rcs.revma.com/an1ugyygzk8uv
 	//char* res = (char*) malloc(1460);
-	char* res;
+	char res[1460];
 	char* mp3_info;
 	size_t mp3_len;
 	char mp3_request[256];
@@ -114,7 +125,6 @@ void radioView(uint8_t* modes_stack, PeripheralsPack& pack) {
 
 	//SpiritMP3DecoderInit(&g_MP3Decoder, RetrieveMP3Data, NULL, (void*) mp3_socket);
 	transfer_enabled = true;
-	uint32_t nSamples;
 
 	/* Main Loop */
 
@@ -124,40 +134,16 @@ void radioView(uint8_t* modes_stack, PeripheralsPack& pack) {
 	//HAL_I2S_Transmit(&hi2s2, (uint16_t*)audio_data, BUFFER_SIZE, HAL_MAX_DELAY);
 	//HAL_I2S_Transmit_DMA(&hi2s2, (uint16_t*)audio_data, BUFFER_SIZE);
 
-	uint8_t counter = 0;
-
-
 
 	pack.storage.openFile("music.mp3", testFile);
 	SpiritMP3DecoderInit(&g_MP3Decoder, RetrieveMP3Data, NULL, (void*) mp3_socket);
 
-	SpiritMP3Decode(&g_MP3Decoder, sound, BUFFER_SIZE, NULL);
+
+	//SpiritMP3Decode(&g_MP3Decoder, sound, BUFFER_SIZE, NULL);
 	HAL_I2S_Transmit_DMA(&hi2s2, (uint16_t*)sound, BUFFER_SIZE*2);
+//	HAL_I2S_Transmit_IT(&hi2s2, (uint16_t*)sound, BUFFER_SIZE*2);
 
 	while(true) {
-//		SpiritMP3Decode(&g_MP3Decoder, sound, BUFFER_SIZE, NULL);
-//		HAL_I2S_Transmit(&hi2s2, (uint16_t*)sound, BUFFER_SIZE*2, HAL_MAX_DELAY);
-//		if(first_half_ended) {
-////			SpiritMP3Decode(&g_MP3Decoder, sound+BUFFER_SIZE/4, BUFFER_SIZE/4, NULL);
-//			first_half_ended = false;
-//		} else if(second_half_ended) {
-////			SpiritMP3Decode(&g_MP3Decoder, sound, BUFFER_SIZE/4, NULL);
-//			second_half_ended = false;
-//		}
-
-		//SpiritMP3Decode(&g_MP3Decoder, audio_data, BUFFER_SIZE, NULL);
-		//HAL_I2S_Transmit(&hi2s2, (uint16_t*)audio_data, BUFFER_SIZE, HAL_MAX_DELAY);
-
-
-		/*if(counter%2 == 0) {
-			SpiritMP3Decode(&g_MP3Decoder, audio_data, BUFFER_SIZE/2, NULL);
-			HAL_I2S_Transmit(&hi2s2, (uint16_t*)audio_data, BUFFER_SIZE/2, HAL_MAX_DELAY);
-		} else {
-			SpiritMP3Decode(&g_MP3Decoder, audio_data + BUFFER_SIZE, BUFFER_SIZE/2, NULL);
-			HAL_I2S_Transmit(&hi2s2, (uint16_t*)(audio_data + BUFFER_SIZE), BUFFER_SIZE/2, HAL_MAX_DELAY);
-		}
-		counter = (counter+1)%2;*/
-
 
 //		wifi::Socket* music_info_socket = pack.wifi.open(1, wifi::SOCKET_TYPE::TCP, ip, current_station.port);
 //		if(music_info_socket->send(music_info_request, strlen(music_info_request))) {
