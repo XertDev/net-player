@@ -233,12 +233,15 @@ void audio::AudioCodec::setFrequency(FREQUENCY freq) {
 }
 
 void audio::AudioCodec::setVolume(uint8_t volume) {
-	if(volume == 0) {
+	if(volume <= 0) {
 		mute();
+		this->current_volume = 0;
 	} else {
 		using detail::REG;
 
-		const uint8_t volume_val = ((volume > 100)? 100:(((volume * 63) / 100)));
+		// Not sure which one is better (probably neither of theese)
+		const uint8_t volume_val = (volume > 63) ? 63 : volume;
+		// const uint8_t volume_val = ((volume > 100)? 100:(((volume * 63) / 100)));
 		this->current_volume = volume_val;
 
 		unmute();

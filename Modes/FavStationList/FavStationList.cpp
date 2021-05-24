@@ -53,8 +53,6 @@ void favStationList(uint8_t* modes_stack, PeripheralsPack& pack) {
 	} while(!f_eof(&file));
 
 	pack.storage.closeFile(file);
-	/*stations.push_back(StationInfo{"Radio 357", "stream.rcs.revma.com", "/an1ugyygzk8uv?rj-ttl=5&rj-tok=AAABeWC4tFcAhiTkk11B7NQz7w", 80});
-	stations.push_back(StationInfo{"Smooth Jazz Florida", "us4.internet-radio.com", "/", 8266});*/
 
 	uint8_t current_scroll_index = 0;
 	uint8_t areas_count = std::max((size_t) 1, (stations.size() - 1) / stations_per_screen + 1);

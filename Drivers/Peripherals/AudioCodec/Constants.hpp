@@ -22,6 +22,9 @@ namespace audio {
 		FREQ_44K
 	};
 
+	FREQUENCY parseFreq(uint32_t freq);
+	uint32_t parseFreqSys(uint32_t freq);
+
 	namespace detail {
 		enum class REG: uint16_t {
 			ID							= 0x00,
