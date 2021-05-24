@@ -31,7 +31,7 @@ static void draw_vol_mult_button(LCDDisplay& display);
 
 constexpr uint8_t target_backlight_level = 100;
 
-constexpr uint16_t BUFFER_SIZE = 1024;//576;
+constexpr uint16_t BUFFER_SIZE = 1152;//576;
 
 FIL testFile;
 int16_t sound[2 * BUFFER_SIZE];
@@ -221,7 +221,7 @@ void radioView(uint8_t* modes_stack, PeripheralsPack& pack) {
 		}
 
 		if(should_change_view) {
-			HAL_I2S_DMAStop(&hi2s);
+			HAL_I2S_DMAStop(&hi2s2);
 			mp3_socket->close();
 			free(music_info);
 			transfer_enabled = false;
